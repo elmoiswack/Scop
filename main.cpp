@@ -1,6 +1,9 @@
 #include <iostream>
 #include "includes/glad/glad.h"
 #include <GLFW/glfw3.h>
+#include "./includes/fileparser.hpp"
+#include "./includes/shader.hpp"
+#include <math.h>
 
 const unsigned int SCREEN_WIDTH = 1920;
 const unsigned int SCREEN_HEIGHT= 1080;
@@ -17,9 +20,21 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    glfwInit();
+	if (argc != 2)
+	{
+		std::cout << "Pass a single object file with the executable! For example: ./Scop objects/42.obj" << std::endl; 
+		return 1;
+	}
+
+	FileParser objectFile = FileParser(argv[1]);
+
+    if (!glfwInit()) {
+		std::cout << "Failed to init glfw for window creation!" << std::endl;
+		return 1;
+	};
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -41,27 +56,36 @@ int main()
 	}    
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
+
+	Shader shader = Shader();
+
+	unsigned int VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	unsigned int VBO;
+	glGenBuffers(1, &VBO);  
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-
-	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glBufferData(GL_ARRAY_BUFFER, objectFile.getVertices().size() * sizeof(float), objectFile.getVertices().data(), GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
 
 	while(!glfwWindowShouldClose(window))
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
+        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+		shader.useProgram();
+		glDrawArrays(GL_LINE_LOOP, 0, objectFile.getVertices().size());
 
 		processInput(window);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
     	glfwSwapBuffers(window);
-    	glfwPollEvents();   
+    	glfwPollEvents();
 	}
 
 	glfwTerminate();
     return 0;
 }
+
