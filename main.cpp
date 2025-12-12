@@ -70,6 +70,62 @@ int main(int argc, char *argv[])
 	glBufferData(GL_ARRAY_BUFFER, objectFile.getVertices().size() * sizeof(float), objectFile.getVertices().data(), GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	
+	float tmpTestMatrix[4][4] = {
+		{3.5, 1.0, 2.0, 3.3},
+		{4.3, 1.3, 0.3, 2.4},
+		{2.3, 5.2, 0.3, 3.4},
+		{1.0, 2.3, 1.0, 1.2}
+	};
+
+	float identityMatrix[4][4] = {
+		{1, 0, 0, 0},
+		{0, 1, 0, 0},
+		{0, 0, 1, 0},
+		{0, 0, 0, 1}
+	};
+
+	int y = 0, x = 0, incrementingFactor = 0;
+	float result[4][4];
+
+	while (y < 4) {
+
+		x = 0;
+		while (x < 4)
+		{
+			float resultNumber = 0;
+			incrementingFactor = 0;
+			while (incrementingFactor < 4) {
+				
+				resultNumber += (tmpTestMatrix[y][incrementingFactor] * identityMatrix[incrementingFactor][x]);
+				incrementingFactor++;
+			}
+			result[y][x] = resultNumber;
+			x++;
+		}
+		y++;
+	}
+	
+	std::cout << "result : " << std::endl;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int y = 0; y < 4; y++)
+		{
+			std::cout << result[i][y] << " ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "expected : " << std::endl;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int y = 0; y < 4; y++)
+		{
+			std::cout << tmpTestMatrix[i][y] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+
 
 	while(!glfwWindowShouldClose(window))
 	{
