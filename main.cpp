@@ -75,28 +75,8 @@ int main(int argc, char *argv[])
 
 	
 	float aspectRatio = float(SCREEN_HEIGHT) / float(SCREEN_WIDTH);
-	float fov = 45.0;
 	float zNear = 0.0;
 	float zFar = 100.0;
-	std::cout << std::to_string(aspectRatio) << " " << std::to_string(fov) << " " << std::to_string(zNear) << " " << std::to_string(zFar) << std::endl;
-	
-
-	float orthographic[rows][4];
-	for (int y = 0; y < rows; y++)
-	{
-		for (int x = 0; x < 4; x++)
-		{
-			if (x == 0) {
-				orthographic[y][x] = verticesMatrix[y][x];
-			} else if (x == 1) {
-				orthographic[y][x] = verticesMatrix[y][x] * aspectRatio;
-			} else if (x == 2) {
-				orthographic[y][x] = (verticesMatrix[y][x] * 0.5) + 0.5;
-			} else {
-				orthographic[y][x] = verticesMatrix[y][x] * 1;
-			}
-		}
-	}
 
 	float orthographicMatrix[4][4] = {
    		{float(1.0) / float(1.0), 0.0, 0.0, 0.0},
