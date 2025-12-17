@@ -1,9 +1,10 @@
 #include <iostream>
 #include "includes/glad/glad.h"
 #include <GLFW/glfw3.h>
+#include <math.h>
 #include "./includes/fileparser.hpp"
 #include "./includes/shader.hpp"
-#include <math.h>
+#include "./includes/matrix.hpp"
 
 const unsigned int SCREEN_WIDTH = 1920;
 const unsigned int SCREEN_HEIGHT= 1080;
@@ -19,6 +20,8 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
+
+
 
 int main(int argc, char *argv[])
 {
@@ -55,7 +58,69 @@ int main(int argc, char *argv[])
 		return -1;
 	}    
 
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);  
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	// float identityMatrix[4][4] = {
+	// 	{1, 0, 0, 0},
+	// 	{0, 1, 0, 0},
+	// 	{0, 0, 1, 0},
+	// 	{0, 0, 0, 1}
+	// };
+
+	Matrix matrixCalculator = Matrix();
+
+	int rows = objectFile.getVertices().size() / 3;
+	float verticesMatrix[rows][4];
+	matrixCalculator.convertVerticesToMatrix(objectFile.getVertices(), verticesMatrix);
+
+	
+	float aspectRatio = float(SCREEN_HEIGHT) / float(SCREEN_WIDTH);
+	float fov = 45.0;
+	float zNear = 0.0;
+	float zFar = 100.0;
+	std::cout << std::to_string(aspectRatio) << " " << std::to_string(fov) << " " << std::to_string(zNear) << " " << std::to_string(zFar) << std::endl;
+	
+
+	float orthographic[rows][4];
+	for (int y = 0; y < rows; y++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			if (x == 0) {
+				orthographic[y][x] = verticesMatrix[y][x];
+			} else if (x == 1) {
+				orthographic[y][x] = verticesMatrix[y][x] * aspectRatio;
+			} else if (x == 2) {
+				orthographic[y][x] = (verticesMatrix[y][x] * 0.5) + 0.5;
+			} else {
+				orthographic[y][x] = verticesMatrix[y][x] * 1;
+			}
+		}
+	}
+
+	float orthographicMatrix[4][4] = {
+   		{float(1.0) / float(1.0), 0.0, 0.0, 0.0},
+        {0.0, float(aspectRatio / float(1.0)), 0.0, 0.0},
+        {0.0, 0.0, float(1.0) / (zFar - zNear), -zNear / (zFar - zNear)},
+        {0.0, 0.0, 0.0, 1.0},
+	};
+
+	float result[rows][4];
+	matrixCalculator.multiplyMatrix(rows, verticesMatrix, orthographicMatrix, result);
+
+	std::cout << "result: " << std::endl;
+	for (int y = 0; y < rows; y++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			std::cout << result[y][x] << " ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+
+//https://www.youtube.com/watch?v=EqNcqBdrNyI ff kijken wanneer je weer bezig gaat
+
 
 	Shader shader = Shader();
 
@@ -67,65 +132,9 @@ int main(int argc, char *argv[])
 	glGenBuffers(1, &VBO);  
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	
-	glBufferData(GL_ARRAY_BUFFER, objectFile.getVertices().size() * sizeof(float), objectFile.getVertices().data(), GL_DYNAMIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBufferData(GL_ARRAY_BUFFER, rows * 4 * sizeof(float), result, GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	
-	float tmpTestMatrix[4][4] = {
-		{3.5, 1.0, 2.0, 3.3},
-		{4.3, 1.3, 0.3, 2.4},
-		{2.3, 5.2, 0.3, 3.4},
-		{1.0, 2.3, 1.0, 1.2}
-	};
-
-	float identityMatrix[4][4] = {
-		{1, 0, 0, 0},
-		{0, 1, 0, 0},
-		{0, 0, 1, 0},
-		{0, 0, 0, 1}
-	};
-
-	int y = 0, x = 0, incrementingFactor = 0;
-	float result[4][4];
-
-	while (y < 4) {
-
-		x = 0;
-		while (x < 4)
-		{
-			float resultNumber = 0;
-			incrementingFactor = 0;
-			while (incrementingFactor < 4) {
-				
-				resultNumber += (tmpTestMatrix[y][incrementingFactor] * identityMatrix[incrementingFactor][x]);
-				incrementingFactor++;
-			}
-			result[y][x] = resultNumber;
-			x++;
-		}
-		y++;
-	}
-	
-	std::cout << "result : " << std::endl;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int y = 0; y < 4; y++)
-		{
-			std::cout << result[i][y] << " ";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "expected : " << std::endl;
-	for (int i = 0; i < 4; i++)
-	{
-		for (int y = 0; y < 4; y++)
-		{
-			std::cout << tmpTestMatrix[i][y] << " ";
-		}
-		std::cout << std::endl;
-	}
-
-
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -133,7 +142,7 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
 
 		shader.useProgram();
-		glDrawArrays(GL_LINE_LOOP, 0, objectFile.getVertices().size());
+		glDrawArrays(GL_LINE_LOOP, 0, rows);
 
 		processInput(window);
 

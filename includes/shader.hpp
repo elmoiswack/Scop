@@ -9,7 +9,7 @@ private:
 	unsigned int shaderProgram;
 	
 	const char *vertexShaderSource = "#version 460 core\n"
-		"layout (location = 0) in vec3 aPos;\n"
+		"layout (location = 0) in vec4 aPos;\n"
 		"\n"
 		"uniform mat4 model;\n"
 		"uniform mat4 view;\n"
@@ -17,7 +17,7 @@ private:
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = vec4(aPos, 1.0);\n"
+		"	gl_Position = vec4(aPos);\n"
 		"}\0";
 
 	const char *fragmentShaderSource = "#version 460 core\n"
