@@ -6,8 +6,11 @@
 #include "./includes/shader.hpp"
 #include "./includes/matrix.hpp"
 
-const unsigned int SCREEN_WIDTH = 1920;
-const unsigned int SCREEN_HEIGHT= 1080;
+
+const unsigned int SCREEN_WIDTH = 2500;
+const unsigned int SCREEN_HEIGHT= 1580;
+float FOCAL_POINT = 0.05;
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -17,9 +20,19 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void processInput(GLFWwindow *window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+		FOCAL_POINT += 0.05;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
+		FOCAL_POINT -= 0.05;
+	}
 }
+
 
 
 
@@ -79,11 +92,18 @@ int main(int argc, char *argv[])
 	float zFar = 100.0;
 
 	float orthographicMatrix[4][4] = {
-   		{float(1.0) / float(1.0), 0.0, 0.0, 0.0},
-        {0.0, float(aspectRatio / float(1.0)), 0.0, 0.0},
+   		{1.0, 0.0, 0.0, 0.0},
+        {0.0, aspectRatio, 0.0, 0.0},
         {0.0, 0.0, float(1.0) / (zFar - zNear), -zNear / (zFar - zNear)},
         {0.0, 0.0, 0.0, 1.0},
 	};
+
+	for (int y = 0; y < rows; y++)
+	{
+		verticesMatrix[y][2] += 2;
+		for (int x = 0; x < 2; x++)
+			verticesMatrix[y][x] /= verticesMatrix[y][2] / FOCAL_POINT;
+	}
 
 	float result[rows][4];
 	matrixCalculator.multiplyMatrix(rows, verticesMatrix, orthographicMatrix, result);
@@ -98,9 +118,6 @@ int main(int argc, char *argv[])
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
-
-//https://www.youtube.com/watch?v=EqNcqBdrNyI ff kijken wanneer je weer bezig gaat
-
 
 	Shader shader = Shader();
 
@@ -123,7 +140,6 @@ int main(int argc, char *argv[])
 
 		shader.useProgram();
 		glDrawArrays(GL_LINE_LOOP, 0, rows);
-
 		processInput(window);
 
     	glfwSwapBuffers(window);
