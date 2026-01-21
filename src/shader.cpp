@@ -35,3 +35,10 @@ void Shader::useProgram() {
 unsigned int Shader::tmp(std::string tmp) {
 	return glGetUniformLocation(this->shaderProgram, tmp.c_str());
 }
+
+void Shader::setUniformMatrix4x4(const float *matrix, const char *name) {
+	glUniformMatrix4fv(
+		glGetUniformLocation(this->shaderProgram, name),
+		1, GL_FALSE, matrix
+	);
+}

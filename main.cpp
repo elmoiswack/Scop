@@ -4,21 +4,11 @@
 #include <math.h>
 #include "./includes/fileparser.hpp"
 #include "./includes/shader.hpp"
-#include "./includes/matrix.hpp"
+#include "./includes/camera.hpp"
 
 
 const unsigned int SCREEN_WIDTH = 2500;
 const unsigned int SCREEN_HEIGHT= 1580;
-
-enum VECTOR_INDEX {
-	X = 0,
-	Y = 1,
-	Z = 2,
-	W = 3
-};
-
-float FOCAL_POINT = 0.05;
-float MOVEMENT_FACTOR = 0.01;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -26,60 +16,117 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window, int rows, float (*result)[4]) //TODO: movement should increment or decrement a single vec pos, not inside the result matrix
+void getForward(float *forward, Camera& cam) {
+    float yawRad = cam.getYRotation() * (3.1415926f / 180.0f);
+    float pitchRad = cam.getXRotation() * (3.1415926f / 180.0f);
+
+    forward[0] = cosf(yawRad) * cosf(pitchRad);
+    forward[1] = sinf(pitchRad);
+    forward[2] = sinf(yawRad) * cosf(pitchRad);
+
+    float len = sqrtf(forward[0]*forward[0] + forward[1]*forward[1] + forward[2]*forward[2]);
+    forward[0] /= len;
+    forward[1] /= len;
+    forward[2] /= len;
+}
+
+void processInput(GLFWwindow *window, Camera& cam, float deltaTime) //TODO: movement should increment or decrement a single vec pos, not inside the result matrix
 {
-	//ESC = close
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
 	}
 
-	//A = left
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        for (int y = 0; y < rows; y++)
-		{
-			result[y][VECTOR_INDEX::X] += MOVEMENT_FACTOR;
-		}
-	}
-	//D = right
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        for (int y = 0; y < rows; y++)
-		{
-			result[y][VECTOR_INDEX::X] -= MOVEMENT_FACTOR;
-		}
-	}
-	//W = up
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        for (int y = 0; y < rows; y++)
-		{
-			result[y][VECTOR_INDEX::Y] -= MOVEMENT_FACTOR;
-		}
-	}
-	//S = down
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        for (int y = 0; y < rows; y++)
-		{
-			result[y][VECTOR_INDEX::Y] += MOVEMENT_FACTOR;
-		}
-	}
+	float forward[3];
+	getForward(forward, cam);
+	
+	float velocity = cam.getMovementSpeed() * deltaTime;
 
-	//Arrow Up = zoom in
+    float right[3] = {
+        forward[2],
+        0.0f,
+        -forward[0]
+    };
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cam.setX(cam.getX() + (forward[0] * velocity));
+        cam.setY(cam.getY() + (forward[1] * velocity));
+        cam.setZ(cam.getZ() + (forward[2] * velocity));
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cam.setX(cam.getX() - (forward[0] * velocity));
+        cam.setY(cam.getY() - (forward[1] * velocity));
+        cam.setZ(cam.getZ() - (forward[2] * velocity));
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cam.setX(cam.getX() + (right[0] * velocity));
+        cam.setZ(cam.getZ() + (right[2] * velocity));
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cam.setX(cam.getX() - (right[0] * velocity));
+        cam.setZ(cam.getZ() - (right[2] * velocity));
+    }
+
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        for (int y = 0; y < rows; y++)
-		{
-			result[y][VECTOR_INDEX::W] -= MOVEMENT_FACTOR;
-		}
-	}
-	//Arrow Down = zoom out
+		float newRotation = cam.getXRotation() + (cam.getRotationSpeed() * deltaTime);
+		if (newRotation > 90.0f)
+			newRotation = 90.0f;
+		cam.setXRotation(newRotation);
+    }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        for (int y = 0; y < rows; y++)
-		{
-			result[y][VECTOR_INDEX::W] += MOVEMENT_FACTOR;
-		}
-	}		
+		float newRotation = cam.getXRotation() - (cam.getRotationSpeed() * deltaTime);
+		if (newRotation < -90.0f)
+			newRotation = -90.0f;
+		cam.setXRotation(newRotation);
+    }
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		float newRotation = cam.getYRotation() + (cam.getRotationSpeed() * deltaTime);
+		if (newRotation > 360.0f)
+			newRotation = -360.0f;
+		cam.setYRotation(newRotation);
+	}
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		float newRotation = cam.getYRotation() - (cam.getRotationSpeed() * deltaTime);
+		if (newRotation < -360.0f)
+			newRotation = 360.0f;
+		cam.setYRotation(newRotation);
+	}
 }
 
+void buildViewMatrix(float* view, Camera& cam) {
+	float forward[3];
+	getForward(forward, cam);
 
+	float eye[3] = {cam.getX(), cam.getY(), cam.getZ()};
+	float center[3] = {cam.getX() + forward[0], cam.getY() + forward[1], cam.getZ() + forward[2]};
+	float up[3] = {0.0f, 1.0f, 0.0f};
 
+	float ftmp[3] = {center[0] - eye[0], center[1] - eye[1], center[2] - eye[2]};
+	float flen = sqrtf(ftmp[0]*ftmp[0] + ftmp[1]*ftmp[1] + ftmp[2]*ftmp[2]);
+	float f[3] = {ftmp[0]/flen, ftmp[1]/flen, ftmp[2]/flen};
+
+	float stmp[3] = {(f[1] * up[2]) - (f[2] * up[1]), (f[2] * up[0]) - (f[0] * up[2]), (f[0] * up[1]) - (f[1] * up[0])};
+	float slen = sqrtf(stmp[0]*stmp[0] + stmp[1]*stmp[1] + stmp[2]*stmp[2]);
+	float s[3]= {stmp[0]/slen, stmp[1]/slen, stmp[2]/slen};
+
+	float u[3] = {(s[1] * f[2]) - (s[2] * f[1]), (s[2] * f[0]) - (s[0] * f[2]), (s[0] * f[1]) - (s[1] * f[0])};
+
+    view[0]  = s[0];
+    view[1]  = u[0];
+    view[2]  = -f[0];
+
+    view[4]  = s[1];
+    view[5]  = u[1];
+    view[6]  = -f[1];
+
+    view[8]  = s[2];
+    view[9]  = u[2];
+    view[10] = -f[2];
+
+	view[12] = -((s[0]*eye[0]) + (s[1]*eye[1]) + (s[2]*eye[2]));
+    view[13] = -((u[0]*eye[0]) + (u[1]*eye[1]) + (u[2]*eye[2]));
+    view[14] = ((f[0]*eye[0]) + (f[1]*eye[1]) + (f[2]*eye[2]));
+    view[15] = 1;
+}
 
 int main(int argc, char *argv[])
 {
@@ -118,88 +165,35 @@ int main(int argc, char *argv[])
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	// float identityMatrix[4][4] = {
-	// 	{1, 0, 0, 0},
-	// 	{0, 1, 0, 0},
-	// 	{0, 0, 1, 0},
-	// 	{0, 0, 0, 1}
-	// };
-
-	Matrix matrixCalculator = Matrix();
-
-	int rows = objectFile.getVertices().size() / 3;
-	float verticesMatrix[rows][4];
-	matrixCalculator.convertVerticesToMatrix(objectFile.getVertices(), verticesMatrix);
-	
-	// float aspectRatio = float(SCREEN_HEIGHT) / float(SCREEN_WIDTH);
-	// float zNear = 0.0;
-	// float zFar = 100.0;
-
-	// float orthographicMatrix[4][4] = {
-   	// 	{1.0, 0.0, 0.0, 0.0},
-    //     {0.0, aspectRatio, 0.0, 0.0},
-    //     {0.0, 0.0, float(1.0) / (zFar - zNear), -zNear / (zFar - zNear)},
-    //     {0.0, 0.0, 0.0, 1.0},
-	// };
-
-	// for (int y = 0; y < rows; y++)
-	// {
-	// 	verticesMatrix[y][2] += 2;
-	// 	for (int x = 0; x < 2; x++)
-	// 		verticesMatrix[y][x] /= verticesMatrix[y][2] / FOCAL_POINT;
-	// }
+	Shader shader = Shader();
+	Camera camera = Camera();
+	objectFile.computeVertexes();
 
 	float aspectRatio = float(SCREEN_HEIGHT) / float(SCREEN_WIDTH);
-	float zNear = 0.1;
-	float zFar = 100.0;
+	float zNear = -1.0;
+	float zFar = 1.0;
 	float fov = 1 / tan(45.0 / 2);
 
-	// float projectionMatrix[4][4] = {
-   	// 	{aspectRatio * (1.0 / tan(fov / 2)), 0.0, 0.0, 0.0},
-    //     {0.0, (1.0 / tan(fov / 2)), 0.0, 0.0},
-    //     {0.0, 0.0, zFar / (zFar - zNear), (-zFar * zNear) / (zFar - zNear)},
-    //     {0.0, 0.0, -1.0, 0.0},
-	// };
-
-	float tmp[4][4] = {
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0},
-		{0, 0, 0, 0}
+	float identity[16] = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1	
 	};
+	shader.setUniformMatrix4x4(identity, "model");
 
-    tmp[0][0] = fov / aspectRatio;
-    tmp[1][1] = fov;
-    tmp[2][2] = -(zFar + zNear) / (zFar - zNear);
-    tmp[2][3] = -1.0f;
-    tmp[3][2] = -(2 * zFar * zNear) / (zFar - zNear);
+	float perspective[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    perspective[0] = fov / aspectRatio;
+    perspective[5] = fov;
+    perspective[10] = (zFar + zNear) / (zNear - zFar);
+    perspective[11] = -1.0f;
+    perspective[14] = -(2 * zFar * zNear) / (zFar - zNear);
 
-	// for (int y = 0; y < rows; y++)
-	// {
-	// 	for (int x = 0; x < 2; x++)
-	// 		verticesMatrix[y][x] = verticesMatrix[y][x] / (verticesMatrix[y][2] / FOCAL_POINT);
-	// }
+	float view[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	buildViewMatrix(view, camera);
 
-	float result[rows][4];
-	matrixCalculator.multiplyMatrix(rows, verticesMatrix, tmp, result);
-
-	std::cout << "result: " << std::endl;
-	for (int y = 0; y < rows; y++)
-	{
-		// if (result[rows][VECTOR_INDEX::W] != 0.0)
-		// {
-		// 	result[rows][VECTOR_INDEX::X] /= result[rows][VECTOR_INDEX::W];
-		// 	result[rows][VECTOR_INDEX::Y] /= result[rows][VECTOR_INDEX::W];
-		// 	result[rows][VECTOR_INDEX::Z] /= result[rows][VECTOR_INDEX::W];
-		// }
-		for (int i = 0; i < 4; i++)
-		{
-			std::cout  << result[y][i] << " ";
-		}
-		std::cout << std::endl;
-	}
-
-	Shader shader = Shader();
+	shader.useProgram();
+	shader.setUniformMatrix4x4(perspective, "perspective");
 
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
@@ -208,21 +202,34 @@ int main(int argc, char *argv[])
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);  
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
 	
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, normal));
+	
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-
+	float lastFrame = 0.0f;
 	while(!glfwWindowShouldClose(window))
 	{
+		float currentFrame = glfwGetTime();
+		float deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 
-		glBufferData(GL_ARRAY_BUFFER, rows * 4 * sizeof(float), result, GL_DYNAMIC_DRAW);
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        glClear(GL_COLOR_BUFFER_BIT);
+		processInput(window, camera, deltaTime);
+
+		buildViewMatrix(view, camera);
 
 		shader.useProgram();
-		glDrawArrays(GL_LINE_LOOP, 0, rows);
-		processInput(window, rows, result);
+		shader.setUniformMatrix4x4(view, "view");
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDrawArrays(GL_TRIANGLES, 0, objectFile.getComputedVertex().size());
 
     	glfwSwapBuffers(window);
     	glfwPollEvents();
@@ -231,14 +238,3 @@ int main(int argc, char *argv[])
 	glfwTerminate();
     return 0;
 }
-
-// -nan -nan -nan -nan 
-// -0.939241 0.0380174 -0.349499 -0.149 
-// -0.456578 0.0162798 -0.496993 -0.2962 
-// -0.289741 0.00897928 -0.64028 -0.4392 
-// -0.201879 0.00539805 -0.77585 -0.5745 
-// -0.14556 0.00334055 -0.899197 -0.6976 
-// -0.104957 0.00207429 -1.00551 -0.8037 
-// -0.0730795 0.00125046 -1.09078 -0.8888 
-// -0.0463429 0.000707229 -1.1526 -0.9505 
-// -0.022502 0.000317642 -1.18978 -0.9876 
