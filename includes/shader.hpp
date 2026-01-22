@@ -1,5 +1,5 @@
-#ifndef SHADER_CPP
-# define SHADER_CPP
+#ifndef SHADER_HPP
+# define SHADER_HPP
 
 #include <iostream>
 
@@ -13,19 +13,28 @@ private:
 		"layout (location = 1) in vec2 aTexture;\n"
 		"layout (location = 2) in vec3 aNormal;\n"
 		"\n"
+		"uniform mat4 model;\n"
 		"uniform mat4 view;\n"
 		"uniform mat4 perspective;\n"
 		"\n"
+		"out vec2 textureCoord;\n"
+		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = perspective * view * vec4(aPos, 1);\n"
+		"	gl_Position = perspective * view * model * vec4(aPos, 1);\n"
+		"	textureCoord = aTexture;\n"
 		"}\0";
 
 	const char *fragmentShaderSource = "#version 460 core\n"
-		"out vec4 FragColor;\n"
+		"in vec2 textureCoord;\n"
+		"\n"
+		"out vec4 color;\n"
+		"\n"
+		"uniform sampler2D tex;\n"
+		"\n"
 		"void main()\n"
 		"{\n"
-		 "	FragColor = vec4(0.5, 0.5, 0.5, 1.0);"
+		"	color = vec4(0.7, 0.2, 0.3, 1.0);\n"
 		"}\0";
 
 public:
@@ -35,6 +44,9 @@ public:
 	unsigned int tmp(std::string);
 	void useProgram();
 	void setUniformMatrix4x4(const float *matrix, const char *name);
+	void setUniform1i(const char* name, int value);
 };
 
 #endif
+
+//"	color = texture(tex, textureCoord);\n"

@@ -32,18 +32,34 @@ struct ComputedVertex {
 	Vertex normal;
 };
 
+struct MTLLIB {
+	std::string name = "";
+	float specularExponent = 0.0f;
+	float opticalDensity = 0.0f;
+	float dissolve = 0.0f;
+	std::vector<float> ambientColor = {0.0f, 0.0f, 0.0f};
+	std::vector<float> diffuseColor = {0.0f, 0.0f, 0.0f};
+	std::vector<float> specularColor = {0.0f, 0.0f, 0.0f};
+	int illumination = 0;
+};
+
 class FileParser
 {
 private:
-	std::vector<Vertex> vertices;
-	std::vector<Vertex> normalVertices;
-	std::vector<TextureVertice> textureVertices;
-	std::vector<std::vector<Face>> faces;
-	std::vector<ComputedVertex> computedVertex;
+	std::vector<Vertex> vertices = {};
+	std::vector<Vertex> normalVertices = {};
+	std::vector<TextureVertice> textureVertices = {};
+	std::vector<std::vector<Face>> faces = {};
+	std::vector<ComputedVertex> computedVertex = {};
+	std::vector<MTLLIB> materials = {};
+	std::vector<std::string> useMaterials = {};
 	
 public:
-	FileParser(char *pathToFile);
+	FileParser(std::string pathToFile);
 	~FileParser();
+
+	void parseMtllibFile(std::string line);
+	std::vector<float> parseRGB(std::vector<std::string>& tokens);
 
 	void parseFaceLine(std::string line);
 	std::vector<std::string> SplitByDelim(std::string line, char delim);

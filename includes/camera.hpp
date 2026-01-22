@@ -1,3 +1,6 @@
+#ifndef CAMERA_HPP
+# define CAMERA_HPP
+
 #include <iostream>
 
 class Camera
@@ -28,4 +31,4 @@ public:
 
 };
 
-
+#endif
