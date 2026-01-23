@@ -18,6 +18,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTime)
 {
+
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
 	}
@@ -33,48 +35,86 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTi
         -forward[0]
     };
 
+	bool change = false;
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		cam.setX(cam.getX() - (forward[0] * velocity));
         cam.setY(cam.getY() - (forward[1] * velocity));
         cam.setZ(cam.getZ() - (forward[2] * velocity));
-    }
+		change = true;
+	}
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         cam.setX(cam.getX() + (forward[0] * velocity));
         cam.setY(cam.getY() + (forward[1] * velocity));
         cam.setZ(cam.getZ() + (forward[2] * velocity));
-    }
+		change = true;
+	}
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
 		cam.setX(cam.getX() + (right[0] * velocity));
         cam.setZ(cam.getZ() + (right[2] * velocity));
-    }
+		change = true;
+	}
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
 		cam.setX(cam.getX() - (right[0] * velocity));
         cam.setZ(cam.getZ() - (right[2] * velocity));
-    }
+		change = true;
+	}
 
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		float newRotation = cam.getXRotation() + (cam.getRotationSpeed() * deltaTime);
 		if (newRotation > 90.0f)
 			newRotation = 90.0f;
 		cam.setXRotation(newRotation);
-    }
+		change = true;
+	}
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		float newRotation = cam.getXRotation() - (cam.getRotationSpeed() * deltaTime);
 		if (newRotation < -90.0f)
 			newRotation = -90.0f;
 		cam.setXRotation(newRotation);
-    }
+		change = true;
+	}
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
 		float newRotation = cam.getYRotation() + (cam.getRotationSpeed() * deltaTime);
 		if (newRotation > 360.0f)
 			newRotation = -360.0f;
 		cam.setYRotation(newRotation);
+		change = true;
 	}
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
 		float newRotation = cam.getYRotation() - (cam.getRotationSpeed() * deltaTime);
 		if (newRotation < -360.0f)
 			newRotation = 360.0f;
 		cam.setYRotation(newRotation);
+		change = true;
+	}
+
+	if (change == true)
+	{
+		std::cout << cam << std::endl;
+	
+		auto viewMatrix = matrix.getViewMatrix();
+	
+		std::cout << "Before build" << std::endl;
+		for (int i = 0; i < 16; i++) {
+			std::cout << viewMatrix[i] << " ";
+			if (i == 3 || i == 7 || i == 11)
+			{
+				std::cout << std::endl;
+			}
+		}
+		std::cout << std::endl  << std::endl;
+		matrix.buildViewMatrix(cam);
+		std::cout << "After build" << std::endl;
+		for (int i = 0; i < 16; i++) {
+			std::cout << viewMatrix[i] << " ";
+			if (i == 3 || i == 7 || i == 11)
+			{
+				std::cout << std::endl;
+			}
+		}
+		std::cout << std::endl << std::endl;
+		change = false;
 	}
 }
 
@@ -142,8 +182,6 @@ int main(int argc, char *argv[])
 
 	glEnable(GL_DEPTH_TEST);
 
-
-
 	objectFile.computeVertexes();
 
 	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
@@ -160,13 +198,11 @@ int main(int argc, char *argv[])
 	float lastFrame = 0.0f;
 	size_t vertexCount = objectFile.getComputedVertex().size();
 	
-	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	glDisable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	auto modeltmp = matrix.getModelMatrix();
-	auto perspectiveTmp = matrix.getPerspectiveMatrix();
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -175,17 +211,6 @@ int main(int argc, char *argv[])
 		lastFrame = currentFrame;
 
 		processInput(window, camera, matrix, deltaTime);
-
-		matrix.buildViewMatrix(camera);
-
-		auto viewMatrix = matrix.getViewMatrix();
-		for (int i = 0; i < 16; i++) {
-			
-			std::cout << "index = " << i << std::endl;
-			std::cout << "Value model = " << modeltmp[i] << std::endl;
-			std::cout << "Value perspective = " << perspectiveTmp[i] << std::endl;
-			std::cout << "Value view = " << viewMatrix[i] << std::endl << std::endl;
-		}
 
 		shader.useProgram();
 		shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");

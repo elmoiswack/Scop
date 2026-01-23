@@ -32,17 +32,6 @@ struct ComputedVertex {
 	Vertex normal;
 };
 
-struct MTLLIB {
-	std::string name = "";
-	float specularExponent = 0.0f;
-	float opticalDensity = 0.0f;
-	float dissolve = 0.0f;
-	std::vector<float> ambientColor = {0.0f, 0.0f, 0.0f};
-	std::vector<float> diffuseColor = {0.0f, 0.0f, 0.0f};
-	std::vector<float> specularColor = {0.0f, 0.0f, 0.0f};
-	int illumination = 0;
-};
-
 class FileParser
 {
 private:
@@ -51,8 +40,6 @@ private:
 	std::vector<TextureVertice> textureVertices = {};
 	std::vector<std::vector<Face>> faces = {};
 	std::vector<ComputedVertex> computedVertex = {};
-	std::vector<MTLLIB> materials = {};
-	std::vector<std::string> useMaterials = {};
 	
 public:
 	FileParser(std::string pathToFile);

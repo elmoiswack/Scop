@@ -20,17 +20,12 @@ Matrix::~Matrix()
 }
 
 void Matrix::getForward(float *forward, Camera& cam) {
-    float yawRad = cam.getYRotation() * (3.1415926f / 180.0f);
-    float pitchRad = cam.getXRotation() * (3.1415926f / 180.0f);
+    float yRad = cam.getYRotation() * (3.1415926f / 180.0f);
+    float xRad = cam.getXRotation() * (3.1415926f / 180.0f);
 
-    forward[0] = cosf(yawRad) * cosf(pitchRad);
-    forward[1] = sinf(pitchRad);
-    forward[2] = sinf(yawRad) * cosf(pitchRad);
-
-    float len = sqrtf(forward[0]*forward[0] + forward[1]*forward[1] + forward[2]*forward[2]);
-    forward[0] /= len;
-    forward[1] /= len;
-    forward[2] /= len;
+    forward[0] = cosf(yRad) * cosf(xRad);
+    forward[1] = sinf(xRad);
+    forward[2] = sinf(yRad) * cosf(xRad);
 }
 
 void Matrix::buildViewMatrix(Camera& cam) {

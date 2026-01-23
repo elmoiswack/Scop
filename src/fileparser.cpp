@@ -30,11 +30,6 @@ FileParser::FileParser(std::string pathToFile)
 			this->textureVertices.push_back(single);
 		} else if (tmpFileLine.find("f ") != tmpFileLine.npos) {
 			this->parseFaceLine(tmpFileLine);
-		} else if (tmpFileLine.find("mtllib") != tmpFileLine.npos) {
-			this->parseMtllibFile(tmpFileLine);
-		} else if (tmpFileLine.find("usemtl") != tmpFileLine.npos) {
-			ss >> v >> name;
-			this->useMaterials.push_back(name);
 		}
 	}
 	objectFile.close();
@@ -45,61 +40,6 @@ FileParser::~FileParser()
 	this->vertices.clear();
 	this->faces.clear();
 }
-
-std::vector<float> FileParser::parseRGB(std::vector<std::string>& tokens) {
-	std::vector<float> result = {std::stof(tokens[1]), std::stof(tokens[2]), std::stof(tokens[3])};
-	return (result);
-}
-
-void FileParser::parseMtllibFile(std::string line) {
-	auto array = this->SplitByDelim(line, ' ');
-	std::ifstream mtlFile("models/" + array[1]);
-
-	if (!mtlFile) {
-		std::cout << "bruh" << std::endl;
-		exit(1);
-	}
-
-	std::string tmpFileLine;
-	this->materials.clear();
-	MTLLIB* currentMaterial = nullptr;
-
-    while (std::getline(mtlFile, tmpFileLine)) {
-        std::stringstream ss(tmpFileLine);
-        std::vector<std::string> tokens;
-        std::string token;
-        
-		while (ss >> token)
-			tokens.push_back(token);
-
-        if (tokens.empty()) 
-			continue;
-
-		if (tokens[0] == "newmtl") {
-            materials.push_back(MTLLIB{});
-            currentMaterial = &materials.back();
-            currentMaterial->name = tokens[1];
-        } else if (!currentMaterial) {
-    		continue;
-		}else if (tokens[0] == "Ns") {
-            currentMaterial->specularExponent = std::stof(tokens[1]);
-        } else if (tokens[0] == "Ni") {
-            currentMaterial->opticalDensity = std::stof(tokens[1]);
-        } else if (tokens[0] == "d") {
-            currentMaterial->dissolve = std::stof(tokens[1]);
-        } else if (tokens[0] == "Ka") {
-            currentMaterial->ambientColor = this->parseRGB(tokens);
-        } else if (tokens[0] == "Kd") {
-            currentMaterial->diffuseColor = this->parseRGB(tokens);
-        } else if (tokens[0] == "Ks") {
-            currentMaterial->specularColor = this->parseRGB(tokens);
-        } else if (tokens[0] == "illum") {
-            currentMaterial->illumination = std::stoi(tokens[1]);
-        }
-    }
-	mtlFile.close();
-}
-
 
 void FileParser::parseFaceLine(std::string line) { 
 	
