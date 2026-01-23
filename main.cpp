@@ -34,21 +34,21 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTi
     };
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		cam.setX(cam.getX() - (forward[0] * velocity));
+        cam.setY(cam.getY() - (forward[1] * velocity));
+        cam.setZ(cam.getZ() - (forward[2] * velocity));
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         cam.setX(cam.getX() + (forward[0] * velocity));
         cam.setY(cam.getY() + (forward[1] * velocity));
         cam.setZ(cam.getZ() + (forward[2] * velocity));
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cam.setX(cam.getX() - (forward[0] * velocity));
-        cam.setY(cam.getY() - (forward[1] * velocity));
-        cam.setZ(cam.getZ() - (forward[2] * velocity));
-    }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cam.setX(cam.getX() + (right[0] * velocity));
+		cam.setX(cam.getX() + (right[0] * velocity));
         cam.setZ(cam.getZ() + (right[2] * velocity));
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cam.setX(cam.getX() - (right[0] * velocity));
+		cam.setX(cam.getX() - (right[0] * velocity));
         cam.setZ(cam.getZ() - (right[2] * velocity));
     }
 
@@ -142,10 +142,12 @@ int main(int argc, char *argv[])
 
 	glEnable(GL_DEPTH_TEST);
 
+
+
 	objectFile.computeVertexes();
 
 	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
-	
+
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
 	glEnableVertexAttribArray(1);
@@ -156,7 +158,15 @@ int main(int argc, char *argv[])
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	float lastFrame = 0.0f;
-	size_t vertexCount = objectFile.getComputedVertex().size() * sizeof(ComputedVertex);
+	size_t vertexCount = objectFile.getComputedVertex().size();
+	
+	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+
+	glDisable(GL_CULL_FACE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	auto modeltmp = matrix.getModelMatrix();
+	auto perspectiveTmp = matrix.getPerspectiveMatrix();
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -168,10 +178,20 @@ int main(int argc, char *argv[])
 
 		matrix.buildViewMatrix(camera);
 
+		auto viewMatrix = matrix.getViewMatrix();
+		for (int i = 0; i < 16; i++) {
+			
+			std::cout << "index = " << i << std::endl;
+			std::cout << "Value model = " << modeltmp[i] << std::endl;
+			std::cout << "Value perspective = " << perspectiveTmp[i] << std::endl;
+			std::cout << "Value view = " << viewMatrix[i] << std::endl << std::endl;
+		}
+
 		shader.useProgram();
 		shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
     	glfwSwapBuffers(window);

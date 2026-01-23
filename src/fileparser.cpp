@@ -161,7 +161,7 @@ std::vector<std::string> FileParser::SplitByDelim(std::string line, char delim) 
 			try {
 				array.push_back(line.substr(start, index - start));
 			} catch (std::out_of_range) {
-				std::cout << "bruh" << std::endl;
+				std::cout << "aaaa" << std::endl;
 				exit(1);
 			}
 			

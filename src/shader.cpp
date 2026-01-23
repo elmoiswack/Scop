@@ -44,5 +44,5 @@ void Shader::setUniformMatrix4x4(const float *matrix, const char *name) {
 }
 
 void Shader::setUniform1i(const char* name, int value) {
-	glUniform1d(glGetUniformLocation(this->shaderProgram, name), value);
+	glUniform1i(glGetUniformLocation(this->shaderProgram, name), value);
 }

@@ -8,29 +8,20 @@ class Shader
 private:
 	unsigned int shaderProgram;
 	
-	const char *vertexShaderSource = "#version 460 core\n"
+	const char *vertexShaderSource = "#version 330 core\n"
 		"layout (location = 0) in vec3 aPos;\n"
-		"layout (location = 1) in vec2 aTexture;\n"
-		"layout (location = 2) in vec3 aNormal;\n"
 		"\n"
 		"uniform mat4 model;\n"
 		"uniform mat4 view;\n"
 		"uniform mat4 perspective;\n"
 		"\n"
-		"out vec2 textureCoord;\n"
-		"\n"
 		"void main()\n"
 		"{\n"
 		"	gl_Position = perspective * view * model * vec4(aPos, 1);\n"
-		"	textureCoord = aTexture;\n"
 		"}\0";
 
-	const char *fragmentShaderSource = "#version 460 core\n"
-		"in vec2 textureCoord;\n"
-		"\n"
+	const char *fragmentShaderSource = "#version 330 core\n"
 		"out vec4 color;\n"
-		"\n"
-		"uniform sampler2D tex;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
