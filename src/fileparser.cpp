@@ -113,7 +113,15 @@ std::vector<std::string> FileParser::SplitByDelim(std::string line, char delim) 
 		index++;
 	}
 
-	array.push_back(line.substr(start, line.size() - start));
+	if (start < line.size())
+	{
+		while (start < line.size() && line[start] == delim)
+			start++;
+		if (start == line.size())
+			return (array);
+
+		array.push_back(line.substr(start, line.size() - start));
+	}
 	return (array);
 }
 

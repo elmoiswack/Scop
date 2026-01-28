@@ -7,8 +7,8 @@
 #include "./includes/camera.hpp"
 #include "./includes/matrix.hpp"
 
-const unsigned int SCREEN_WIDTH = 2500;
-const unsigned int SCREEN_HEIGHT= 1580;
+const unsigned int SCREEN_WIDTH = 1920;
+const unsigned int SCREEN_HEIGHT= 1080;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -16,10 +16,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTime)
+void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shader, float deltaTime)
 {
-
-
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
 	}
@@ -38,15 +36,15 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTi
 	bool change = false;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		cam.setX(cam.getX() - (forward[0] * velocity));
-        cam.setY(cam.getY() - (forward[1] * velocity));
-        cam.setZ(cam.getZ() - (forward[2] * velocity));
-		change = true;
-	}
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         cam.setX(cam.getX() + (forward[0] * velocity));
         cam.setY(cam.getY() + (forward[1] * velocity));
         cam.setZ(cam.getZ() + (forward[2] * velocity));
+		change = true;
+	}
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		cam.setX(cam.getX() - (forward[0] * velocity));
+        cam.setY(cam.getY() - (forward[1] * velocity));
+        cam.setZ(cam.getZ() - (forward[2] * velocity));
 		change = true;
 	}
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
@@ -59,7 +57,6 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTi
         cam.setZ(cam.getZ() - (right[2] * velocity));
 		change = true;
 	}
-
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		float newRotation = cam.getXRotation() + (cam.getRotationSpeed() * deltaTime);
 		if (newRotation > 90.0f)
@@ -88,33 +85,14 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, float deltaTi
 		cam.setYRotation(newRotation);
 		change = true;
 	}
-
-	if (change == true)
-	{
-		std::cout << cam << std::endl;
-	
-		auto viewMatrix = matrix.getViewMatrix();
-	
-		std::cout << "Before build" << std::endl;
-		for (int i = 0; i < 16; i++) {
-			std::cout << viewMatrix[i] << " ";
-			if (i == 3 || i == 7 || i == 11)
-			{
-				std::cout << std::endl;
-			}
-		}
-		std::cout << std::endl  << std::endl;
+	if (change == true) {
 		matrix.buildViewMatrix(cam);
-		std::cout << "After build" << std::endl;
-		for (int i = 0; i < 16; i++) {
-			std::cout << viewMatrix[i] << " ";
-			if (i == 3 || i == 7 || i == 11)
-			{
-				std::cout << std::endl;
-			}
-		}
-		std::cout << std::endl << std::endl;
+		shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 		change = false;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+		shader.changeMode();
 	}
 }
 
@@ -180,8 +158,6 @@ int main(int argc, char *argv[])
 	glGenBuffers(1, &VBO);  
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	glEnable(GL_DEPTH_TEST);
-
 	objectFile.computeVertexes();
 
 	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
@@ -192,31 +168,71 @@ int main(int argc, char *argv[])
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, normal));
+
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	float lastFrame = 0.0f;
 	size_t vertexCount = objectFile.getComputedVertex().size();
 	
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
+	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-
+	float color[3] = {0.0f, 0.0f, 0.0f};
+	int colorIndex = 0;
+	bool tmp = false;
 	while(!glfwWindowShouldClose(window))
 	{
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		processInput(window, camera, matrix, shader, deltaTime);
 
-		processInput(window, camera, matrix, deltaTime);
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.useProgram();
-		shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		std::cout << "current color index = " << colorIndex << std::endl;
+		std::cout << "current value = " << color[0] << ", " << color[1] << ", " << color[2] << std::endl;
+
+		if (tmp == false)
+		{
+			if (color[colorIndex] > 1.0f)
+			{
+				color[colorIndex] = 1.0f;
+				colorIndex += 1;
+			}
+	
+			if (colorIndex == 3)
+			{
+				colorIndex -= 1;
+				tmp = true;
+			} else {
+				color[colorIndex] += 1.0f / 255.0f;
+			}
+		} else {
+			if (color[colorIndex] < 0.0f)
+			{
+				color[colorIndex] = 0.0f;
+				colorIndex -= 1;
+			}
+	
+			if (colorIndex == -1)
+			{
+				colorIndex += 1;
+				tmp = false;
+			} else {
+				color[colorIndex] -= 1.0f / 255.0f;
+			}			
+		}
+
+		shader.setUniform3f("aColor", color);
+
 		glBindVertexArray(VAO);
+		glPolygonMode(GL_FRONT_AND_BACK, shader.getMode());
 		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
     	glfwSwapBuffers(window);

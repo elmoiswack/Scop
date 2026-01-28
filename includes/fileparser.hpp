@@ -45,9 +45,6 @@ public:
 	FileParser(std::string pathToFile);
 	~FileParser();
 
-	void parseMtllibFile(std::string line);
-	std::vector<float> parseRGB(std::vector<std::string>& tokens);
-
 	void parseFaceLine(std::string line);
 	std::vector<std::string> SplitByDelim(std::string line, char delim);
 	int amountDelimInLine(std::string line, char delim);

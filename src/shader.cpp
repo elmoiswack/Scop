@@ -20,7 +20,10 @@ Shader::Shader()
 	glLinkProgram(this->shaderProgram);
 
 	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);	
+	glDeleteShader(fragmentShader);
+
+	this->currentDrawingMode = 0;
+	this->lastDeltaTimeForChange = 0.0f;
 }
 
 Shader::~Shader()
@@ -32,10 +35,6 @@ void Shader::useProgram() {
 	glUseProgram(this->shaderProgram);
 }
 
-unsigned int Shader::tmp(std::string tmp) {
-	return glGetUniformLocation(this->shaderProgram, tmp.c_str());
-}
-
 void Shader::setUniformMatrix4x4(const float *matrix, const char *name) {
 	glUniformMatrix4fv(
 		glGetUniformLocation(this->shaderProgram, name),
@@ -45,4 +44,23 @@ void Shader::setUniformMatrix4x4(const float *matrix, const char *name) {
 
 void Shader::setUniform1i(const char* name, int value) {
 	glUniform1i(glGetUniformLocation(this->shaderProgram, name), value);
+}
+
+void Shader::setUniform3f(const char* name, float* value) {
+	glUniform3f(glGetUniformLocation(this->shaderProgram, name), value[0], value[1], value[2]);
+}
+
+
+void Shader::changeMode() {
+	if (glfwGetTime() > (this->lastDeltaTimeForChange + 1.0f)) {
+		this->lastDeltaTimeForChange = glfwGetTime();
+		if (this->currentDrawingMode == 2)
+			this->currentDrawingMode = 0;
+		else
+			this->currentDrawingMode += 1;
+	}
+}
+
+int Shader::getMode() {
+	return (this->drawingMode[this->currentDrawingMode]);
 }

@@ -3,7 +3,7 @@
 Matrix::Matrix(const unsigned int width, const unsigned int height)
 {
 	float aspectRatio = float(width) / float(height);
-	float zNear = 0.1f;
+	float zNear = 0.01f;
 	float zFar = 100.0f;
 	float fov = 45.0f * (3.1415926f / 180.0f);
 	float f = 1.0f / tan(fov / 2.0f);
@@ -60,7 +60,7 @@ void Matrix::buildViewMatrix(Camera& cam) {
 
 	this->view[12] = -(s[0]*eye[0] + s[1]*eye[1] + s[2]*eye[2]);
 	this->view[13] = -(u[0]*eye[0] + u[1]*eye[1] + u[2]*eye[2]);
-	this->view[14] = -(f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2]);
+	this->view[14] = (f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2]);
 	this->view[15] = 1.0f;
 }
 
