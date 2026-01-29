@@ -22,8 +22,8 @@ Shader::Shader()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	this->currentDrawingMode = 0;
 	this->lastDeltaTimeForChange = 0.0f;
+	this->currentDisplayMode = DisplayMode::FILL;
 }
 
 Shader::~Shader()
@@ -59,15 +59,29 @@ void Shader::setUniform3f(const char* name, float* value) {
 
 
 void Shader::changeMode() {
-	if (glfwGetTime() > (this->lastDeltaTimeForChange + 1.0f)) {
-		this->lastDeltaTimeForChange = glfwGetTime();
-		if (this->currentDrawingMode == 2)
-			this->currentDrawingMode = 0;
-		else
-			this->currentDrawingMode += 1;
+	float currentTime = glfwGetTime();
+
+	if (this->lastDeltaTimeForChange + 1.0f < currentTime)
+	{
+		this->lastDeltaTimeForChange = currentTime;
+		switch (this->currentDisplayMode)
+		{
+		case DisplayMode::POINT:
+			this->currentDisplayMode = DisplayMode::LINE;
+			break ;
+		case DisplayMode::LINE:
+			this->currentDisplayMode = DisplayMode::FILL;
+			break ;
+		case DisplayMode::FILL:
+			this->currentDisplayMode = DisplayMode::POINT;
+			break ;
+		default:
+			this->currentDisplayMode = DisplayMode::FILL;
+			break;
+		}
 	}
 }
 
 int Shader::getMode() {
-	return (this->bla[this->currentDrawingMode]);
+	return (this->currentDisplayMode);
 }

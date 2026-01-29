@@ -7,9 +7,9 @@ Camera::Camera()
 	this->z = 3.0f;
 	this->yRotation = -90.0f;
 	this->xRotation = 0.0f;
-	this->rotationSpeed = 60.0f;
+	this->rotationSpeed = 80.0f;
 	this->movementSpeed = 10.0f;
-}	
+}
 
 Camera::~Camera()
 {

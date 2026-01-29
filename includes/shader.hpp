@@ -5,13 +5,18 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
+enum DisplayMode {
+	POINT = GL_POINT,
+	LINE = GL_LINE,
+	FILL = GL_FILL,
+};
+
 class Shader
 {
 private:
 	unsigned int shaderProgram;
+	DisplayMode currentDisplayMode;
 	
-	int currentDrawingMode;
-	GLenum bla[3] = {GL_POINT, GL_LINE, GL_FILL};
 	float lastDeltaTimeForChange;
 
 	const char *vertexShaderSource = "#version 330 core\n"

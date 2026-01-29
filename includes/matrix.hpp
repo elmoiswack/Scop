@@ -4,6 +4,13 @@
 #include <math.h>
 #include "./camera.hpp"
 
+enum Rotation {
+	X,
+	Y,
+	Z,
+	NONE
+};
+
 class Matrix
 {
 private:
@@ -15,7 +22,7 @@ private:
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
-	std::string whichRotation;
+	Rotation whichRotation;
 
 	float identity[16] = {
 		1, 0, 0, 0,

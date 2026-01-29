@@ -116,6 +116,27 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 
 }
 
+void displayControls() {
+	std::cout << "CONTROLS" << std::endl;
+	std::cout << "--------------------------------" << std::endl;
+	std::cout << "MOVEMENT:" << std::endl;
+	std::cout << "W = forward" << std::endl;
+	std::cout << "A = left" << std::endl;
+	std::cout << "S = back" << std::endl;
+	std::cout << "D = right" << std::endl;
+	std::cout << "Arrow Up = look up" << std::endl;
+	std::cout << "Arrow Left = look left" << std::endl;
+	std::cout << "Arrow Down = look down" << std::endl;
+	std::cout << "Arrow Right = look right" << std::endl;
+	std::cout << "--------------------------------" << std::endl;
+	std::cout << "ROTATION:" << std::endl;
+	std::cout << "R + X = rotation x-axis" << std::endl;
+	std::cout << "R + Y = rotation y-axis" << std::endl;
+	std::cout << "R + Z = rotation z-axis" << std::endl;
+	std::cout << "R + C = rotation clear" << std::endl;
+	std::cout << "--------------------------------" << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc != 2)
@@ -205,14 +226,29 @@ int main(int argc, char *argv[])
 	// int colorIndex = 0;
 	// bool tmp = false;
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+
+	displayControls();
+
+	float lastTime = glfwGetTime();
+	int frames = 0;
 
 	while(!glfwWindowShouldClose(window))
 	{
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
+		frames++;
+		if (lastTime + 1 < currentFrame)
+		{
+			std::cout << "FPS = " << frames << std::endl;
+			lastTime = currentFrame;
+			frames = 0;
+		}
+
 		processInput(window, camera, matrix, shader, deltaTime);
+		
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

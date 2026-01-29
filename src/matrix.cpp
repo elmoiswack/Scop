@@ -17,7 +17,7 @@ Matrix::Matrix(const unsigned int width, const unsigned int height)
 
 	this->angle = 0.00f;
 	this->rotate = false;
-	this->whichRotation = "identity";
+	this->whichRotation = Rotation::NONE;
 }
 
 Matrix::~Matrix()
@@ -71,24 +71,24 @@ void Matrix::buildViewMatrix(Camera& cam) {
 
 void Matrix::setModelToIdentity() {
 	this->rotate = false;
-	this->whichRotation = "identity";
+	this->whichRotation = Rotation::NONE;
 	this->angle = 0.00f;
 	memcpy(this->model, this->identity, 16 * sizeof(float));
 }
 
 void Matrix::setModelToX() {
 	this->rotate = true;
-	this->whichRotation = "rotationX";
+	this->whichRotation = Rotation::X;
 }
 
 void Matrix::setModelToY() {
 	this->rotate = true;
-	this->whichRotation = "rotationY";
+	this->whichRotation = Rotation::Y;
 }
 
 void Matrix::setModelToZ() {
 	this->rotate = true;
-	this->whichRotation = "rotationZ";
+	this->whichRotation = Rotation::Z;
 }
 
 void  Matrix::computeModelToX() {
@@ -120,11 +120,11 @@ void Matrix::setAngle(float rotationSpeed) {
 		this->angle = 0.00f;
 	this->angle += rotationSpeed;
 
-	if (whichRotation == "rotationX")
+	if (this->whichRotation == Rotation::X)
 		this->computeModelToX();
-	else if (whichRotation == "rotationY")
+	else if (this->whichRotation == Rotation::Y)
 		this->computeModelToY();
-	else if (whichRotation == "rotationZ")
+	else if (this->whichRotation == Rotation::Z)
 		this->computeModelToZ();
 }
 
