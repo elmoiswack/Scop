@@ -7,7 +7,17 @@
 class Matrix
 {
 private:
-	float model[16] = {
+	float angle;
+	bool rotate;
+	float model[16]  = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+	std::string whichRotation;
+
+	float identity[16] = {
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
@@ -23,9 +33,20 @@ public:
 	void getForward(float *forward, Camera& cam);
 	void buildViewMatrix(Camera& cam);
 
+	void setModelToIdentity();
+	void setModelToX();
+	void setModelToY();
+	void setModelToZ();
+	void computeModelToX();
+	void computeModelToY();
+	void computeModelToZ();
+	void setAngle(float rotationSpeed);
+
 	float* getModelMatrix();
 	float* getPerspectiveMatrix();
 	float* getViewMatrix();
+	bool getRotate();
+
 };
 
 

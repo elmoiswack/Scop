@@ -42,6 +42,13 @@ void Shader::setUniformMatrix4x4(const float *matrix, const char *name) {
 	);
 }
 
+void Shader::setUniformMatrix3x3(const float *matrix, const char *name) {
+	glUniformMatrix3fv(
+		glGetUniformLocation(this->shaderProgram, name),
+		1, GL_FALSE, matrix
+	);
+}
+
 void Shader::setUniform1i(const char* name, int value) {
 	glUniform1i(glGetUniformLocation(this->shaderProgram, name), value);
 }
@@ -62,5 +69,5 @@ void Shader::changeMode() {
 }
 
 int Shader::getMode() {
-	return (this->drawingMode[this->currentDrawingMode]);
+	return (this->bla[this->currentDrawingMode]);
 }

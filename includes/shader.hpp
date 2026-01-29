@@ -2,6 +2,8 @@
 # define SHADER_HPP
 
 #include <iostream>
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
 
 class Shader
 {
@@ -9,10 +11,8 @@ private:
 	unsigned int shaderProgram;
 	
 	int currentDrawingMode;
-	const int drawingMode[3] = {0x1B00, 0x1B01, 0x1B02};
-	// GLenum drawingMode[3] = {GL_POINT, GL_LINE, GL_FILL};
+	GLenum bla[3] = {GL_POINT, GL_LINE, GL_FILL};
 	float lastDeltaTimeForChange;
-
 
 	const char *vertexShaderSource = "#version 330 core\n"
 		"layout (location = 0) in vec3 aPos;\n"
@@ -33,7 +33,7 @@ private:
 		"	gl_Position = perspective * view * model * vec4(aPos, 1);\n"
 		"	textureColor = aTexture;\n"
 		"	Normal = aNormal;\n"
-		"	fragColor = aPos;\n"
+		"	fragColor = aPos * aColor;\n"
 		"}\0";
 
 	const char *fragmentShaderSource = "#version 330 core\n"
@@ -52,9 +52,9 @@ public:
 
 	void useProgram();
 	void setUniformMatrix4x4(const float *matrix, const char *name);
+	void setUniformMatrix3x3(const float *matrix, const char *name);
 	void setUniform1i(const char* name, int value);
 	void setUniform3f(const char* name, float* value);
-
 
 	void changeMode();
 	int getMode();

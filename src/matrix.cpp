@@ -1,4 +1,5 @@
 #include "../includes/matrix.hpp"
+#include <string.h>
 
 Matrix::Matrix(const unsigned int width, const unsigned int height)
 {
@@ -8,11 +9,15 @@ Matrix::Matrix(const unsigned int width, const unsigned int height)
 	float fov = 45.0f * (3.1415926f / 180.0f);
 	float f = 1.0f / tan(fov / 2.0f);
 
-	perspective[0]  = f / aspectRatio;
-	perspective[5]  = f;
-	perspective[10] = (zFar + zNear) / (zNear - zFar);
-	perspective[11] = -1.0f;
-	perspective[14] = (2 * zFar * zNear) / (zNear - zFar);
+	this->perspective[0]  = f / aspectRatio;
+	this->perspective[5]  = f;
+	this->perspective[10] = (zFar + zNear) / (zNear - zFar);
+	this->perspective[11] = -1.0f;
+	this->perspective[14] = (2 * zFar * zNear) / (zNear - zFar);
+
+	this->angle = 0.00f;
+	this->rotate = false;
+	this->whichRotation = "identity";
 }
 
 Matrix::~Matrix()
@@ -64,6 +69,65 @@ void Matrix::buildViewMatrix(Camera& cam) {
 	this->view[15] = 1.0f;
 }
 
+void Matrix::setModelToIdentity() {
+	this->rotate = false;
+	this->whichRotation = "identity";
+	this->angle = 0.00f;
+	memcpy(this->model, this->identity, 16 * sizeof(float));
+}
+
+void Matrix::setModelToX() {
+	this->rotate = true;
+	this->whichRotation = "rotationX";
+}
+
+void Matrix::setModelToY() {
+	this->rotate = true;
+	this->whichRotation = "rotationY";
+}
+
+void Matrix::setModelToZ() {
+	this->rotate = true;
+	this->whichRotation = "rotationZ";
+}
+
+void  Matrix::computeModelToX() {
+	memcpy(this->model, this->identity, 16 * sizeof(float));
+	this->model[5] = cos(this->angle);
+	this->model[6] = -sin(this->angle);
+	this->model[9] = sin(this->angle);
+	this->model[10] = cos(this->angle);
+}
+
+void  Matrix::computeModelToY() {
+	memcpy(this->model, this->identity, 16 * sizeof(float));
+	this->model[0] = cos(this->angle);
+	this->model[2] = sin(this->angle);
+	this->model[8] = -sin(this->angle);
+	this->model[10] = cos(this->angle);
+}
+
+void  Matrix::computeModelToZ() {
+	memcpy(this->model, this->identity, 16 * sizeof(float));
+	this->model[0] = cos(this->angle);
+	this->model[1] = -sin(this->angle);
+	this->model[4] = sin(this->angle);
+	this->model[5] = cos(this->angle);
+}
+
+void Matrix::setAngle(float rotationSpeed) {
+	if ((this->angle + rotationSpeed) > 359.9f)
+		this->angle = 0.00f;
+	this->angle += rotationSpeed;
+
+	if (whichRotation == "rotationX")
+		this->computeModelToX();
+	else if (whichRotation == "rotationY")
+		this->computeModelToY();
+	else if (whichRotation == "rotationZ")
+		this->computeModelToZ();
+}
+
 float* Matrix::getModelMatrix() {
 	return this->model;
 }
@@ -74,4 +138,8 @@ float* Matrix::getPerspectiveMatrix() {
 
 float* Matrix::getViewMatrix() {
 	return this->view;
+}
+
+bool Matrix::getRotate() {
+	return this->rotate;
 }

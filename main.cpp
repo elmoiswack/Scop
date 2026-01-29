@@ -59,15 +59,15 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	}
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		float newRotation = cam.getXRotation() + (cam.getRotationSpeed() * deltaTime);
-		if (newRotation > 90.0f)
-			newRotation = 90.0f;
+		if (newRotation > 89.0f)
+			newRotation = 89.0f;
 		cam.setXRotation(newRotation);
 		change = true;
 	}
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
 		float newRotation = cam.getXRotation() - (cam.getRotationSpeed() * deltaTime);
-		if (newRotation < -90.0f)
-			newRotation = -90.0f;
+		if (newRotation < -89.0f)
+			newRotation = -89.0f;
 		cam.setXRotation(newRotation);
 		change = true;
 	}
@@ -94,6 +94,26 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
 		shader.changeMode();
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+		matrix.setModelToX();
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+		matrix.setModelToY();
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+		matrix.setModelToZ();
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		matrix.setModelToIdentity();
+		shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
+	}
+
+	if (matrix.getRotate() == true) {
+		matrix.setAngle(1.2f);
+		shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
+	}
+
 }
 
 int main(int argc, char *argv[])
@@ -140,6 +160,7 @@ int main(int argc, char *argv[])
 	matrix.buildViewMatrix(camera);
 
 	shader.useProgram();
+
 	shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
 	shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
@@ -180,9 +201,12 @@ int main(int argc, char *argv[])
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	float color[3] = {0.0f, 0.0f, 0.0f};
-	int colorIndex = 0;
-	bool tmp = false;
+	float color[3] = {1.0f, 1.0f, 1.0f};
+	// int colorIndex = 0;
+	// bool tmp = false;
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
 	while(!glfwWindowShouldClose(window))
 	{
 		float currentFrame = glfwGetTime();
@@ -190,44 +214,70 @@ int main(int argc, char *argv[])
 		lastFrame = currentFrame;
 		processInput(window, camera, matrix, shader, deltaTime);
 
-		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.useProgram();
 
-		std::cout << "current color index = " << colorIndex << std::endl;
-		std::cout << "current value = " << color[0] << ", " << color[1] << ", " << color[2] << std::endl;
+		// std::cout << "current color index = " << colorIndex << std::endl;
+		// std::cout << "current value = " << color[0] << ", " << color[1] << ", " << color[2] << std::endl;
 
-		if (tmp == false)
-		{
-			if (color[colorIndex] > 1.0f)
-			{
-				color[colorIndex] = 1.0f;
-				colorIndex += 1;
-			}
+		// if (tmp == false)
+		// {
+		// 	if (color[colorIndex] > 1.0f)
+		// 	{
+		// 		color[colorIndex] = 1.0f;
+		// 		colorIndex += 1;
+		// 	}
 	
-			if (colorIndex == 3)
-			{
-				colorIndex -= 1;
-				tmp = true;
-			} else {
-				color[colorIndex] += 1.0f / 255.0f;
-			}
-		} else {
-			if (color[colorIndex] < 0.0f)
-			{
-				color[colorIndex] = 0.0f;
-				colorIndex -= 1;
-			}
+		// 	if (colorIndex == 3)
+		// 	{
+		// 		colorIndex -= 1;
+		// 		tmp = true;
+		// 	} else {
+		// 		color[colorIndex] += 1.0f / 255.0f;
+		// 	}
+		// } else {
+		// 	if (color[colorIndex] < 0.0f)
+		// 	{
+		// 		color[colorIndex] = 0.0f;
+		// 		colorIndex -= 1;
+		// 	}
 	
-			if (colorIndex == -1)
-			{
-				colorIndex += 1;
-				tmp = false;
-			} else {
-				color[colorIndex] -= 1.0f / 255.0f;
-			}			
-		}
+		// 	if (colorIndex == -1)
+		// 	{
+		// 		colorIndex += 1;
+		// 		tmp = false;
+		// 	} else {
+		// 		color[colorIndex] -= 1.0f / 255.0f;
+		// 	}
+		// }
+
+		// if (tmp == false)
+		// {
+		// 	if (color[0] > 1.0f)
+		// 	{
+		// 		for (int i = 0; i < 3; i++)
+		// 			color[i] = 1.0f;
+		// 		tmp = true;
+		// 	}
+		// 	else
+		// 	{
+		// 		for (int i = 0; i < 3; i++)
+		// 			color[i] += 0.01f;
+		// 	}
+		// } else {
+		// 	if (color[0] < 0.0f)
+		// 	{
+		// 		for (int i = 0; i < 3; i++)
+		// 			color[i] = 0.0f;
+		// 		tmp = false;
+		// 	}
+		// 	else
+		// 	{
+		// 		for (int i = 0; i < 3; i++)
+		// 			color[i] -= 0.01f;
+		// 	}
+		// }
 
 		shader.setUniform3f("aColor", color);
 
