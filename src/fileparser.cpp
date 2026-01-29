@@ -1,7 +1,6 @@
 #include "../includes/fileparser.hpp"
 
-FileParser::FileParser(std::string pathToFile)
-{
+FileParser::FileParser(std::string pathToFile) {
 	std::ifstream objectFile(pathToFile);
 
 	if (!objectFile) {
@@ -35,14 +34,17 @@ FileParser::FileParser(std::string pathToFile)
 	objectFile.close();
 }
 
-FileParser::~FileParser()
-{
+FileParser::~FileParser() {
 	this->vertices.clear();
+	this->computedVertex.clear();
+	this->textureVertices.clear();
+	this->normalVertices.clear();
+	for (auto it = this->faces.begin(); it != this->faces.end(); it++)
+		(*it).clear();
 	this->faces.clear();
 }
 
 void FileParser::parseFaceLine(std::string line) { 
-	
 	line.erase(0, 2);
 	auto faceArray = this->SplitByDelim(line,  ' ');
 	std::vector<Face> facesFromLine = {};
@@ -79,7 +81,6 @@ void FileParser::parseFaceLine(std::string line) {
 }
 
 int FileParser::amountDelimInLine(std::string line, char delim) {
-	
 	int count = 0;
 
 	for (auto it = line.begin(); it != line.end(); it++) {
@@ -91,7 +92,6 @@ int FileParser::amountDelimInLine(std::string line, char delim) {
 }
 
 std::vector<std::string> FileParser::SplitByDelim(std::string line, char delim) {
-
 	std::vector<std::string> array = {};
 	std::size_t start = 0, index = 0;
 

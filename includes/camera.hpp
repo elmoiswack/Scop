@@ -26,9 +26,6 @@ public:
 	void setZ(float newZ);
 	void setXRotation(float newXRotation);
 	void setYRotation(float newYRotation);
-
-	friend std::ostream& operator<<(std::ostream &out, Camera &in);
-
 };
 
 #endif

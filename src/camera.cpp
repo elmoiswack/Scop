@@ -1,7 +1,6 @@
 #include "../includes/camera.hpp"
 
-Camera::Camera()
-{
+Camera::Camera() {
 	this->x = 0.0f;
 	this->y = 0.0f;
 	this->z = 3.0f;
@@ -11,9 +10,7 @@ Camera::Camera()
 	this->movementSpeed = 10.0f;
 }
 
-Camera::~Camera()
-{
-}
+Camera::~Camera() {}
 
 float Camera::getX() {
 	return this->x;
@@ -61,11 +58,4 @@ void Camera::setXRotation(float newXRotation) {
 
 void Camera::setYRotation(float newYRotation) {
 	this->yRotation = newYRotation;
-}
-
-
-std::ostream& operator<<(std::ostream &out, Camera &in) {
-	out << "X = " << in.getX() << ", Y = " << in.getY() << ", Z = " << in.getZ() << std::endl;
-	out << "xRotation = " << in.getXRotation() << ", yRotation = " << in.getYRotation() << std::endl;
-	return out;
 }

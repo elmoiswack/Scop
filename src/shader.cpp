@@ -3,8 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <cmath>
 
-Shader::Shader()
-{
+Shader::Shader() {
 	const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	this->shaderProgram = glCreateProgram();
@@ -26,8 +25,7 @@ Shader::Shader()
 	this->currentDisplayMode = DisplayMode::FILL;
 }
 
-Shader::~Shader()
-{
+Shader::~Shader() {
 	glDeleteShader(this->shaderProgram);
 }
 
@@ -61,7 +59,7 @@ void Shader::setUniform3f(const char* name, float* value) {
 void Shader::changeMode() {
 	float currentTime = glfwGetTime();
 
-	if (this->lastDeltaTimeForChange + 1.0f < currentTime)
+	if (this->lastDeltaTimeForChange + .5f < currentTime)
 	{
 		this->lastDeltaTimeForChange = currentTime;
 		switch (this->currentDisplayMode)

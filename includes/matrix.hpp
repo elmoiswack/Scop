@@ -8,6 +8,7 @@ enum Rotation {
 	X,
 	Y,
 	Z,
+	CRAZY,
 	NONE
 };
 
@@ -44,16 +45,18 @@ public:
 	void setModelToX();
 	void setModelToY();
 	void setModelToZ();
+	void setModelToCrazy();
 	void computeModelToX();
 	void computeModelToY();
 	void computeModelToZ();
+	void computeModelToCrazy();
+
 	void setAngle(float rotationSpeed);
 
 	float* getModelMatrix();
 	float* getPerspectiveMatrix();
 	float* getViewMatrix();
 	bool getRotate();
-
 };
 
 

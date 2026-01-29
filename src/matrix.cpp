@@ -1,8 +1,7 @@
 #include "../includes/matrix.hpp"
 #include <string.h>
 
-Matrix::Matrix(const unsigned int width, const unsigned int height)
-{
+Matrix::Matrix(const unsigned int width, const unsigned int height) {
 	float aspectRatio = float(width) / float(height);
 	float zNear = 0.01f;
 	float zFar = 100.0f;
@@ -20,9 +19,7 @@ Matrix::Matrix(const unsigned int width, const unsigned int height)
 	this->whichRotation = Rotation::NONE;
 }
 
-Matrix::~Matrix()
-{
-}
+Matrix::~Matrix() {}
 
 void Matrix::getForward(float *forward, Camera& cam) {
     float yRad = cam.getYRotation() * (3.1415926f / 180.0f);
@@ -91,6 +88,11 @@ void Matrix::setModelToZ() {
 	this->whichRotation = Rotation::Z;
 }
 
+void Matrix::setModelToCrazy() {
+	this->rotate = true;
+	this->whichRotation = Rotation::CRAZY;
+}
+
 void  Matrix::computeModelToX() {
 	memcpy(this->model, this->identity, 16 * sizeof(float));
 	this->model[5] = cos(this->angle);
@@ -115,6 +117,15 @@ void  Matrix::computeModelToZ() {
 	this->model[5] = cos(this->angle);
 }
 
+void  Matrix::computeModelToCrazy() {
+	memcpy(this->model, this->identity, 16 * sizeof(float));
+	this->model[3] = cos(this->angle);
+	this->model[7] = -sin(this->angle);
+	this->model[2] = sin(this->angle);
+	this->model[1] = -cos(this->angle);
+	this->model[10] = cos(this->angle);
+}
+
 void Matrix::setAngle(float rotationSpeed) {
 	if ((this->angle + rotationSpeed) > 359.9f)
 		this->angle = 0.00f;
@@ -126,6 +137,8 @@ void Matrix::setAngle(float rotationSpeed) {
 		this->computeModelToY();
 	else if (this->whichRotation == Rotation::Z)
 		this->computeModelToZ();
+	else if (this->whichRotation == Rotation::CRAZY)
+		this->computeModelToCrazy();
 }
 
 float* Matrix::getModelMatrix() {

@@ -105,6 +105,9 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 		matrix.setModelToZ();
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		matrix.setModelToCrazy();
+	}
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
 		matrix.setModelToIdentity();
 		shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
 	}
@@ -129,11 +132,15 @@ void displayControls() {
 	std::cout << "Arrow Down = look down" << std::endl;
 	std::cout << "Arrow Right = look right" << std::endl;
 	std::cout << "--------------------------------" << std::endl;
+	std::cout << "MODES" << std::endl;
+	std::cout << "M = change draw mode" << std::endl;
+	std::cout << "--------------------------------" << std::endl;
 	std::cout << "ROTATION:" << std::endl;
 	std::cout << "R + X = rotation x-axis" << std::endl;
 	std::cout << "R + Y = rotation y-axis" << std::endl;
 	std::cout << "R + Z = rotation z-axis" << std::endl;
-	std::cout << "R + C = rotation clear" << std::endl;
+	std::cout << "R + C = rotation crazy" << std::endl;
+	std::cout << "R + N = rotation none" << std::endl;
 	std::cout << "--------------------------------" << std::endl;
 }
 
@@ -230,8 +237,8 @@ int main(int argc, char *argv[])
 
 	displayControls();
 
-	float lastTime = glfwGetTime();
-	int frames = 0;
+	// float lastTime = glfwGetTime();
+	// int frames = 0;
 
 	while(!glfwWindowShouldClose(window))
 	{
@@ -239,13 +246,13 @@ int main(int argc, char *argv[])
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		frames++;
-		if (lastTime + 1 < currentFrame)
-		{
-			std::cout << "FPS = " << frames << std::endl;
-			lastTime = currentFrame;
-			frames = 0;
-		}
+		// frames++;
+		// if (lastTime + 1 < currentFrame)
+		// {
+		// 	std::cout << "FPS = " << frames << std::endl;
+		// 	lastTime = currentFrame;
+		// 	frames = 0;
+		// }
 
 		processInput(window, camera, matrix, shader, deltaTime);
 		
