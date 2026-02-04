@@ -128,15 +128,7 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && textureAvailable == true) {
 		shader.setUniform1i("useTexture", true);
 	}
-	// if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-	// 	shader.setColor((float[]){1.0f, 0.0f, 0.0f});
-	// 	shader.setUniform3f("aColor", shader.getColor());
-	// 	shader.setUniform1i("useTexture", false);
-	// }
-	// if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-	// 	shader.setColor((float[]){0.0f, 1.0f, 0.0f});
-	// 	shader.setUniform3f("aColor", shader.getColor());
-	// }
+
 	if (shader.getBreatheEffect() == true) {
 		if (shader.getIncrementColorValues() == true)
 			shader.incrementColor();
@@ -276,9 +268,6 @@ int main(int argc, char *argv[])
 
 	displayControls();
 
-	// float lastTime = glfwGetTime();
-	// int frames = 0;
-
 	bool texture = objectFile.getTextureAvailable();
 
 	while(!glfwWindowShouldClose(window))
@@ -286,14 +275,6 @@ int main(int argc, char *argv[])
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
-		// frames++;
-		// if (lastTime + 1 < currentFrame)
-		// {
-		// 	std::cout << "FPS = " << frames << std::endl;
-		// 	lastTime = currentFrame;
-		// 	frames = 0;
-		// }
 
 		processInput(window, camera, matrix, shader, texture, deltaTime);
 
