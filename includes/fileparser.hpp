@@ -29,14 +29,12 @@ struct Face {
 struct ComputedVertex {
 	Vertex pos;
 	TextureVertice texture;
-	Vertex normal;
 };
 
 class FileParser
 {
 private:
 	std::vector<Vertex> vertices = {};
-	std::vector<Vertex> normalVertices = {};
 	std::vector<TextureVertice> textureVertices = {};
 	std::vector<std::vector<Face>> faces = {};
 	std::vector<ComputedVertex> computedVertex = {};
@@ -60,7 +58,6 @@ public:
 
 	void computeVertexes();
 	TextureVertice getTextureFromFace(const Face& single);
-	Vertex getNormalFromFace(const Face& single);
 	
 	std::vector<Vertex> getVertices();
 	std::vector<std::vector<Face>> getFaces();

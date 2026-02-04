@@ -20,7 +20,6 @@ FileParser::~FileParser() {
 	this->vertices.clear();
 	this->computedVertex.clear();
 	this->textureVertices.clear();
-	this->normalVertices.clear();
 	for (auto it = this->faces.begin(); it != this->faces.end(); it++)
 		(*it).clear();
 	this->faces.clear();
@@ -50,10 +49,6 @@ void FileParser::parseInputFile(std::string pathToFile) {
 			ss >> v >> x >> y >> z;
 			Vertex single = {std::stof(x.c_str()), std::stof(y.c_str()), std::stof(z.c_str())};
 			this->vertices.push_back(single);
-		} else if (tmpFileLine.find("vn") != tmpFileLine.npos) {
-			ss >> v >> x >> y >> z;
-			Vertex single = {std::stof(x.c_str()), std::stof(y.c_str()), std::stof(z.c_str())};
-			this->normalVertices.push_back(single);
 		} else if (tmpFileLine.find("vt") != tmpFileLine.npos) {
 			ss >> v >> x >> y;
 			TextureVertice single = {std::stof(x.c_str()), std::stof(y.c_str())};
@@ -184,13 +179,6 @@ TextureVertice FileParser::getTextureFromFace(const Face& single) {
 	return (this->textureVertices[single.texture]);
 }
 
-Vertex FileParser::getNormalFromFace(const Face& single) {
-	if ((single.normal) < 0)
-		return {0.0f, 0.0f, 0.0f};
-
-	return (this->normalVertices[single.normal]);
-}
-
 void FileParser::computeVertexes() {
 	this->computedVertex = {};
 
@@ -202,9 +190,9 @@ void FileParser::computeVertexes() {
 			auto secondFace = this->faces[index][second];
 			auto thirdFace = this->faces[index][third];
 
-			this->computedVertex.push_back({this->vertices[firstFace.vertice], getTextureFromFace(firstFace), getNormalFromFace(firstFace)});
-			this->computedVertex.push_back({this->vertices[secondFace.vertice], getTextureFromFace(secondFace), getNormalFromFace(secondFace)});
-			this->computedVertex.push_back({this->vertices[thirdFace.vertice], getTextureFromFace(thirdFace), getNormalFromFace(thirdFace)});
+			this->computedVertex.push_back({this->vertices[firstFace.vertice], getTextureFromFace(firstFace)});
+			this->computedVertex.push_back({this->vertices[secondFace.vertice], getTextureFromFace(secondFace)});
+			this->computedVertex.push_back({this->vertices[thirdFace.vertice], getTextureFromFace(thirdFace)});
 
 			second++;
 			third++;
