@@ -1,13 +1,44 @@
 #include "../includes/fileparser.hpp"
 
+FileParser::FileParser() {
+	this->textureData = nullptr;
+}
+
 FileParser::FileParser(std::string pathToFile) {
+	this->parseInputFile(pathToFile);
+	this->textureData = nullptr;
+	this->textureAvailable = false;
+}
+
+FileParser::FileParser(std::string pathToFile, std::string pathToTexture) {
+	this->parseInputFile(pathToFile);
+	this->parseInputTexture(pathToTexture);
+	this->textureAvailable = true;
+}
+
+FileParser::~FileParser() {
+	this->vertices.clear();
+	this->computedVertex.clear();
+	this->textureVertices.clear();
+	this->normalVertices.clear();
+	for (auto it = this->faces.begin(); it != this->faces.end(); it++)
+		(*it).clear();
+	this->faces.clear();
+	if (this->textureData != nullptr)
+	{
+		delete[] this->textureData;
+		this->textureData = nullptr;
+	}
+}
+
+void FileParser::parseInputFile(std::string pathToFile) {
 	std::ifstream objectFile(pathToFile);
 
 	if (!objectFile) {
 		exit(1);
 	}
 
-	std::string tmpFileLine, singleVertice, singleFragment;
+	std::string tmpFileLine;
 	std::string v, x, y, z, name;
 
 	while (!objectFile.eof())
@@ -32,16 +63,6 @@ FileParser::FileParser(std::string pathToFile) {
 		}
 	}
 	objectFile.close();
-}
-
-FileParser::~FileParser() {
-	this->vertices.clear();
-	this->computedVertex.clear();
-	this->textureVertices.clear();
-	this->normalVertices.clear();
-	for (auto it = this->faces.begin(); it != this->faces.end(); it++)
-		(*it).clear();
-	this->faces.clear();
 }
 
 void FileParser::parseFaceLine(std::string line) { 
@@ -125,6 +146,37 @@ std::vector<std::string> FileParser::SplitByDelim(std::string line, char delim) 
 	return (array);
 }
 
+void FileParser::parseInputTexture(std::string pathToTexture) {
+    FILE* f = fopen(pathToTexture.c_str(), "rb");
+    unsigned char info[54];
+
+    fread(info, sizeof(unsigned char), 54, f); 
+
+    int width = *(int*)&info[18];
+    int height = *(int*)&info[22];
+
+    int size = 3 * width * height;
+    this->textureData = new unsigned char[size];
+
+    fread(this->textureData, sizeof(unsigned char), size, f);
+    fclose(f);
+
+	if (!this->textureData) {
+		std::cout << "Failed to load texture" << std::endl;
+		exit(1);
+	}
+
+	this->textureWidth = width;
+	this->textureHeight = height;
+
+    for (int i = 0; i < size; i += 3)
+    {
+        unsigned char tmp = this->textureData[i];
+        this->textureData[i] = this->textureData[i+2];
+        this->textureData[i+2] = tmp;
+    }
+}
+
 TextureVertice FileParser::getTextureFromFace(const Face& single) {
 	if ((single.texture) < 0)
 		return {0.0f, 0.0f};
@@ -170,4 +222,20 @@ std::vector<std::vector<Face>> FileParser::getFaces() {
 
 std::vector<ComputedVertex> FileParser::getComputedVertex() {
 	return this->computedVertex;
+}
+
+bool FileParser::getTextureAvailable() {
+	return this->textureAvailable;
+}
+
+unsigned char *FileParser::getTextureData() {
+	return this->textureData;
+}
+
+int FileParser::getTextureWidth() {
+	return this->textureWidth;
+}
+
+int FileParser::getTextureHeight() {
+	return this->textureHeight;
 }

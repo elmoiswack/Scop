@@ -7,9 +7,9 @@ OBJ := $(SRC:.cpp=.o)
 OBJ := $(OBJ:.c=.o)
 
 CC := c++
-CFLAGS := -Wall -Wextra -Werror -std=c++20
+CFLAGS := -Wall -Wextra -Werror -std=c++20 
 
-LIBS := -lglfw -lGL -ldl -lm -lpthread
+LIBS := -lglfw -lGL -ldl -lm -lpthread 
 
 all: $(NAME)
 

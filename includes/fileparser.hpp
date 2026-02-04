@@ -40,10 +40,19 @@ private:
 	std::vector<TextureVertice> textureVertices = {};
 	std::vector<std::vector<Face>> faces = {};
 	std::vector<ComputedVertex> computedVertex = {};
+	bool textureAvailable = false;
+	unsigned char* textureData;
+	int textureWidth = 0;
+	int textureHeight = 0;
 	
 public:
+	FileParser();
 	FileParser(std::string pathToFile);
+	FileParser(std::string pathToFile, std::string pathToTexture);
 	~FileParser();
+
+	void parseInputFile(std::string pathToFile);
+	void parseInputTexture(std::string pathToTexture);
 
 	void parseFaceLine(std::string line);
 	std::vector<std::string> SplitByDelim(std::string line, char delim);
@@ -56,6 +65,10 @@ public:
 	std::vector<Vertex> getVertices();
 	std::vector<std::vector<Face>> getFaces();
 	std::vector<ComputedVertex> getComputedVertex();
+	bool getTextureAvailable();
+	unsigned char* getTextureData();
+	int getTextureWidth();
+	int getTextureHeight();
 };
 
 #endif

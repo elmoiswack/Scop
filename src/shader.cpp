@@ -23,6 +23,9 @@ Shader::Shader() {
 
 	this->lastDeltaTimeForChange = 0.0f;
 	this->currentDisplayMode = DisplayMode::FILL;
+	this->color = {1.0f, 1.0f, 1.0f};
+	this->incrementColorValues = false;
+	this->breatheEffect = false;
 }
 
 Shader::~Shader() {
@@ -55,6 +58,56 @@ void Shader::setUniform3f(const char* name, float* value) {
 	glUniform3f(glGetUniformLocation(this->shaderProgram, name), value[0], value[1], value[2]);
 }
 
+void Shader::setColor(float *newColor) {
+	if (this->breatheEffect == true)
+		this->breatheEffect = false;
+	this->color.clear();
+	this->color = {newColor[0], newColor[1], newColor[2]};
+}
+
+float *Shader::getColor() {
+	return this->color.data();
+}
+
+void Shader::incrementColor() {
+	if (this->color[0] > 1.0f)
+	{
+		for (int i = 0; i < 3; i++)
+			this->color[i] = 1.0f;
+		this->incrementColorValues = false;
+	}
+	else
+	{
+		for (int i = 0; i < 3; i++)
+			this->color[i] += 0.01f;
+	}
+}
+
+void Shader::decrementColor() {
+	if (color[0] < 0.0f)
+	{
+		for (int i = 0; i < 3; i++)
+			color[i] = 0.0f;
+		this->incrementColorValues = true;
+	}
+	else
+	{
+		for (int i = 0; i < 3; i++)
+			color[i] -= 0.01f;
+	}
+}
+
+bool Shader::getIncrementColorValues() {
+	return this->incrementColorValues;
+}
+
+bool Shader::getBreatheEffect() {
+	return this->breatheEffect;
+}
+
+void Shader::setBreatheEffect(bool newValue) {
+	this->breatheEffect = newValue;
+}
 
 void Shader::changeMode() {
 	float currentTime = glfwGetTime();
