@@ -9,7 +9,7 @@ OBJ := $(OBJ:.c=.o)
 CC := c++
 UNAME_S := $(shell uname -s)
 
-CFLAGS := -Wall -Wextra -Werror -std=c++20 -Iincludes -g -fsanitize=address
+CFLAGS := -Wall -Wextra -Werror -std=c++20 -Iincludes
 
 ifeq ($(UNAME_S),Linux)
     LIBS := -lglfw -lGL -ldl -lm -lpthread
@@ -23,7 +23,7 @@ ifeq ($(UNAME_S),Darwin)
             -framework Cocoa \
             -framework IOKit \
             -framework CoreVideo \
-			-g -fsanitize=address
+		
 endif
 
 all: delete_appledouble $(NAME)
