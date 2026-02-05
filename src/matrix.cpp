@@ -30,40 +30,68 @@ void Matrix::getForward(float *forward, Camera& cam) {
     forward[2] = sinf(yRad) * cosf(xRad);
 }
 
-void Matrix::buildViewMatrix(Camera& cam) {
-	float forward[3];
-	this->getForward(forward, cam);
+void Matrix::normalize(float v[3])
+{
+    float len = std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    if (len == 0.0f) return;
+    v[0] /= len;
+    v[1] /= len;
+    v[2] /= len;
+}
 
-	float eye[3] = {cam.getX(), cam.getY(), cam.getZ()};
-	float center[3] = {cam.getX() + forward[0], cam.getY() + forward[1], cam.getZ() + forward[2]};
-	float up[3] = {0.0f, 1.0f, 0.0f};
+void Matrix::cross(float out[3], const float a[3], const float b[3])
+{
+    out[0] = a[1]*b[2] - a[2]*b[1];
+    out[1] = a[2]*b[0] - a[0]*b[2];
+    out[2] = a[0]*b[1] - a[1]*b[0];
+}
 
-	float ftmp[3] = {center[0] - eye[0], center[1] - eye[1], center[2] - eye[2]};
-	float flen = sqrtf(ftmp[0]*ftmp[0] + ftmp[1]*ftmp[1] + ftmp[2]*ftmp[2]);
-	float f[3] = {ftmp[0]/flen, ftmp[1]/flen, ftmp[2]/flen};
+float Matrix::dot(const float a[3], const float b[3])
+{
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
 
-	float stmp[3] = {(f[1] * up[2]) - (f[2] * up[1]), (f[2] * up[0]) - (f[0] * up[2]), (f[0] * up[1]) - (f[1] * up[0])};
-	float slen = sqrtf(stmp[0]*stmp[0] + stmp[1]*stmp[1] + stmp[2]*stmp[2]);
-	float s[3]= {stmp[0]/slen, stmp[1]/slen, stmp[2]/slen};
+void Matrix::buildViewMatrix(Camera& cam)
+{
+    float eye[3] = { cam.getX(), cam.getY(), cam.getZ() };
+    float up[3]  = { 0.0f, 1.0f, 0.0f };
 
-	float u[3] = {(s[1] * f[2]) - (s[2] * f[1]), (s[2] * f[0]) - (s[0] * f[2]), (s[0] * f[1]) - (s[1] * f[0])};
+    float forward[3];
+    this->getForward(forward, cam);
 
-    this->view[0]  = s[0];
-    this->view[1]  = u[0];
-    this->view[2]  = -f[0];
+    float f[3] = {
+        forward[0],
+        forward[1],
+        forward[2]
+    };
+    this->normalize(f);
 
-    this->view[4]  = s[1];
-    this->view[5]  = u[1];
-    this->view[6]  = -f[1];
+    float s[3];
+    this->cross(s, f, up);
+    this->normalize(s);
 
-    this->view[8]  = s[2];
-    this->view[9]  = u[2];
-    this->view[10] = -f[2];
+    float u[3];
+    this->cross(u, s, f);
 
-	this->view[12] = -(s[0]*eye[0] + s[1]*eye[1] + s[2]*eye[2]);
-	this->view[13] = -(u[0]*eye[0] + u[1]*eye[1] + u[2]*eye[2]);
-	this->view[14] = (f[0]*eye[0] + f[1]*eye[1] + f[2]*eye[2]);
-	this->view[15] = 1.0f;
+    view[0]  =  s[0];
+    view[1]  =  u[0];
+    view[2]  = -f[0];
+    view[3]  =  0.0f;
+
+    view[4]  =  s[1];
+    view[5]  =  u[1];
+    view[6]  = -f[1];
+    view[7]  =  0.0f;
+
+    view[8]  =  s[2];
+    view[9]  =  u[2];
+    view[10] = -f[2];
+    view[11] =  0.0f;
+
+    view[12] = -dot(s, eye);
+    view[13] = -dot(u, eye);
+    view[14] =  dot(f, eye);
+    view[15] =  1.0f;
 }
 
 void Matrix::setModelToIdentity() {

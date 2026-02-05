@@ -85,7 +85,7 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 		cam.setYRotation(newRotation);
 		change = true;
 	}
-	if (change == true) {
+	if (change) {
 		matrix.buildViewMatrix(cam);
 		shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 		change = false;
@@ -119,14 +119,46 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
 		shader.setColor((float[]){1.0f, 1.0f, 1.0f});
 		shader.setUniform3f("aColor", shader.getColor());
-		shader.setUniform1i("useTexture", false);
+		shader.setShowTexture(false);
+	}
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+		shader.setColor((float[]){1.0f, 0.0f, 0.0f});
+		shader.setUniform3f("aColor", shader.getColor());
+		shader.setShowTexture(false);
+	}
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+		shader.setColor((float[]){0.0f, 1.0f, 0.0f});
+		shader.setUniform3f("aColor", shader.getColor());
+		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
-		shader.setBreatheEffect(true);
-		shader.setUniform1i("useTexture", false);
+		shader.setColor((float[]){0.0f, 0.0f, 1.0f});
+		shader.setUniform3f("aColor", shader.getColor());
+		shader.setShowTexture(false);
 	}
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && textureAvailable == true) {
-		shader.setUniform1i("useTexture", true);
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
+		shader.setShowTexture(false);
+		if (shader.getBreatheEffect() == true)
+			shader.setBreatheEffect(false);
+		else
+			shader.setBreatheEffect(true);
+	}
+
+	if (shader.getFinishedApplyTexture() == true && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && textureAvailable == true) {
+		shader.setFinishedApplyTexture(false);
+		if (shader.getTextureOpacity() == 0.0f)
+			shader.setShowTexture(true);
+		else
+			shader.setShowTexture(false);
+	}
+
+	if (shader.getShowTexture() == true && shader.getFinishedApplyTexture() == false) {
+		shader.incrementTextureOpacity(deltaTime);
+		shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
+	}
+	if (shader.getShowTexture() == false && shader.getFinishedApplyTexture() == false) {
+		shader.decrementTextureOpacity(deltaTime);
+		shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
 	}
 
 	if (shader.getBreatheEffect() == true) {
@@ -164,8 +196,11 @@ void displayControls() {
 	std::cout << "--------------------------------" << std::endl;
 	std::cout << "COLOR:" << std::endl;
 	std::cout << "C + F = color per face" << std::endl;
-	std::cout << "C + B = color breathe effect" << std::endl;
-	std::cout << "C + T = color texture" << std::endl;
+	std::cout << "C + R = color red" << std::endl;
+	std::cout << "C + G = color green" << std::endl;
+	std::cout << "C + B = color blue" << std::endl;
+	std::cout << "C + H = color breathe effect" << std::endl;
+	std::cout << "C + T = apply texture" << std::endl;
 	std::cout << "--------------------------------" << std::endl;
 }
 
@@ -211,14 +246,6 @@ int main(int argc, char *argv[])
 	Camera camera = Camera();
 	Matrix matrix = Matrix(SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	matrix.buildViewMatrix(camera);
-
-	shader.useProgram();
-
-	shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
-	shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
-	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
-
 	unsigned int textureID;
 	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &textureID);
@@ -226,10 +253,9 @@ int main(int argc, char *argv[])
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, objectFile.getTextureWidth(), objectFile.getTextureHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, objectFile.getTextureData());
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, objectFile.getTextureWidth(), objectFile.getTextureHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, objectFile.getTextureData());
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-	shader.setUniform1i("ourTexture", 0);
 
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
@@ -239,23 +265,8 @@ int main(int argc, char *argv[])
 	glGenBuffers(1, &VBO);  
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	objectFile.computeVertexes();
-	
-	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
-	
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	shader.setUniform3f("aColor", shader.getColor());
-	shader.setUniform1i("useTexture", false);
-
-	float lastFrame = 0.0f;
-	size_t vertexCount = objectFile.getComputedVertex().size();
-	
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
@@ -264,8 +275,28 @@ int main(int argc, char *argv[])
 	displayControls();
 
 	bool texture = objectFile.getTextureAvailable();
+	
+	matrix.buildViewMatrix(camera);
+	
+	shader.useProgram();
+	shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
+	shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
+	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
+	shader.setUniform1i("ourTexture", 0);
+	shader.setUniform3f("aColor", shader.getColor());
+	shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
 
-	while(!glfwWindowShouldClose(window))
+	objectFile.computeVertexes();
+	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
+	
+	float lastFrame = 0.0f;
+	size_t vertexCount = objectFile.getComputedVertex().size();
+
+	while (!glfwWindowShouldClose(window))
 	{
 		float currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrame;
@@ -275,8 +306,6 @@ int main(int argc, char *argv[])
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader.useProgram();
-
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glBindVertexArray(VAO);
 		glPolygonMode(GL_FRONT_AND_BACK, shader.getMode());
@@ -285,8 +314,10 @@ int main(int argc, char *argv[])
     	glfwSwapBuffers(window);
     	glfwPollEvents();
 	}
+
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 	glfwTerminate();
-    return 0;
+    
+	return 0;
 }

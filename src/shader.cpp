@@ -4,32 +4,56 @@
 #include <cmath>
 
 Shader::Shader() {
-	const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	this->shaderProgram = glCreateProgram();
+    const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    
+    glShaderSource(vertexShader, 1, &this->vertexShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, &this->fragmentShaderSource, NULL);
+    
+    glCompileShader(vertexShader);
+    glCompileShader(fragmentShader);
 
-	glShaderSource(vertexShader, 1, &this->vertexShaderSource, NULL);
-	glShaderSource(fragmentShader, 1, &this->fragmentShaderSource, NULL);
-	
-	glCompileShader(vertexShader);
-	glCompileShader(fragmentShader);
+    GLint success;
+    GLchar infoLog[512];
+    
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "Vertex shader compilation failed:\n" << infoLog << std::endl;
+	}
+    
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "Fragment shader compilation failed:\n" << infoLog << std::endl;
+	}
 
-	glAttachShader(this->shaderProgram, vertexShader);
-	glAttachShader(this->shaderProgram, fragmentShader);
-	glLinkProgram(this->shaderProgram);
+    this->shaderProgram = glCreateProgram();
+    glAttachShader(this->shaderProgram, vertexShader);
+    glAttachShader(this->shaderProgram, fragmentShader);
+    glLinkProgram(this->shaderProgram);
+    
+    glGetProgramiv(this->shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(this->shaderProgram, 512, NULL, infoLog);
+        std::cout << "Shader program linking failed:\n" << infoLog << std::endl;
+    }
 
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 
 	this->lastDeltaTimeForChange = 0.0f;
 	this->currentDisplayMode = DisplayMode::FILL;
 	this->color = {1.0f, 1.0f, 1.0f};
 	this->incrementColorValues = false;
 	this->breatheEffect = false;
+	this->textureOpacity = 0.0f;
+	this->showTexture = false;
+	this->finishedApplyTexture = true;
 }
 
 Shader::~Shader() {
-	glDeleteShader(this->shaderProgram);
+	glDeleteProgram(this->shaderProgram);
 }
 
 void Shader::useProgram() {
@@ -51,7 +75,11 @@ void Shader::setUniformMatrix3x3(const float *matrix, const char *name) {
 }
 
 void Shader::setUniform1i(const char* name, int value) {
-	glUniform1i(glGetUniformLocation(this->shaderProgram, name), value);
+    glUniform1i(glGetUniformLocation(this->shaderProgram, name), value);
+}
+
+void Shader::setUniform1f(const char* name, float value) {
+	glUniform1f(glGetUniformLocation(this->shaderProgram, name), value);
 }
 
 void Shader::setUniform3f(const char* name, float* value) {
@@ -61,8 +89,9 @@ void Shader::setUniform3f(const char* name, float* value) {
 void Shader::setColor(float *newColor) {
 	if (this->breatheEffect == true)
 		this->breatheEffect = false;
-	this->color.clear();
-	this->color = {newColor[0], newColor[1], newColor[2]};
+    this->color[0] = newColor[0];
+    this->color[1] = newColor[1];
+    this->color[2] = newColor[2];
 }
 
 float *Shader::getColor() {
@@ -84,16 +113,16 @@ void Shader::incrementColor() {
 }
 
 void Shader::decrementColor() {
-	if (color[0] < 0.0f)
+	if (this->color[0] < 0.0f)
 	{
 		for (int i = 0; i < 3; i++)
-			color[i] = 0.0f;
+			this->color[i] = 0.0f;
 		this->incrementColorValues = true;
 	}
 	else
 	{
 		for (int i = 0; i < 3; i++)
-			color[i] -= 0.01f;
+			this->color[i] -= 0.01f;
 	}
 }
 
@@ -106,13 +135,57 @@ bool Shader::getBreatheEffect() {
 }
 
 void Shader::setBreatheEffect(bool newValue) {
-	this->breatheEffect = newValue;
+	if (this->lastDeltaTimeForChange + 0.5f < glfwGetTime())
+	{
+		this->breatheEffect = newValue;
+		this->lastDeltaTimeForChange = glfwGetTime();
+	}
+}
+
+bool Shader::getFinishedApplyTexture() {
+	return this->finishedApplyTexture;
+}
+
+void Shader::setFinishedApplyTexture(bool newValue) {
+	this->finishedApplyTexture = newValue;
+}
+
+void Shader::incrementTextureOpacity(float deltaTime) {
+    float speed = 2.0f;
+    this->textureOpacity += speed * deltaTime;
+    if (this->textureOpacity > 1.0f)
+	{
+		this->finishedApplyTexture = true;
+        this->textureOpacity = 1.0f;
+	}
+}
+
+void Shader::decrementTextureOpacity(float deltaTime) {
+    float speed = 2.0f;
+    this->textureOpacity -= speed * deltaTime;
+    if (this->textureOpacity < 0.0f)
+	{
+		this->finishedApplyTexture = true;
+        this->textureOpacity = 0.0f;
+	}
+}
+
+float Shader::getTextureOpacity() {
+	return this->textureOpacity;
+}
+
+bool Shader::getShowTexture() {
+	return this->showTexture;
+}
+
+void Shader::setShowTexture(bool newValue) {
+	this->showTexture = newValue;
 }
 
 void Shader::changeMode() {
 	float currentTime = glfwGetTime();
 
-	if (this->lastDeltaTimeForChange + .5f < currentTime)
+	if (this->lastDeltaTimeForChange + 0.5f < currentTime)
 	{
 		this->lastDeltaTimeForChange = currentTime;
 		switch (this->currentDisplayMode)

@@ -7,11 +7,26 @@ OBJ := $(SRC:.cpp=.o)
 OBJ := $(OBJ:.c=.o)
 
 CC := c++
-CFLAGS := -Wall -Wextra -Werror -std=c++20 
+UNAME_S := $(shell uname -s)
 
-LIBS := -lglfw -lGL -ldl -lm -lpthread 
+CFLAGS := -Wall -Wextra -Werror -std=c++20 -Iincludes -g -fsanitize=address
 
-all: $(NAME)
+ifeq ($(UNAME_S),Linux)
+    LIBS := -lglfw -lGL -ldl -lm -lpthread
+endif
+
+ifeq ($(UNAME_S),Darwin)
+    GLFW_PREFIX := $(shell brew --prefix glfw)
+    CFLAGS += -I$(GLFW_PREFIX)/include
+    LIBS := -L$(GLFW_PREFIX)/lib -lglfw \
+            -framework OpenGL \
+            -framework Cocoa \
+            -framework IOKit \
+            -framework CoreVideo \
+			-g -fsanitize=address
+endif
+
+all: delete_appledouble $(NAME)
 
 $(NAME): $(OBJ)
 	$(CC) $(OBJ) -o $(NAME) $(LIBS)
@@ -30,4 +45,8 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+delete_appledouble:
+	@echo "Deleting AppleDouble files..."
+	@find . -name '._*' -type f -delete
+
+.PHONY: all clean fclean re delete_appledouble

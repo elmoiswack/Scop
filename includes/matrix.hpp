@@ -39,6 +39,9 @@ public:
 	~Matrix();
 
 	void getForward(float *forward, Camera& cam);
+	void normalize(float v[3]);
+	void cross(float out[3], const float a[3], const float b[3]);
+	float dot(const float a[3], const float b[3]);
 	void buildViewMatrix(Camera& cam);
 
 	void setModelToIdentity();

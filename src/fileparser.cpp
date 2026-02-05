@@ -1,16 +1,11 @@
 #include "../includes/fileparser.hpp"
 
-FileParser::FileParser() {
-	this->textureData = nullptr;
-}
-
-FileParser::FileParser(std::string pathToFile) {
+FileParser::FileParser(const std::string& pathToFile) {
 	this->parseInputFile(pathToFile);
-	this->textureData = nullptr;
 	this->textureAvailable = false;
 }
 
-FileParser::FileParser(std::string pathToFile, std::string pathToTexture) {
+FileParser::FileParser(const std::string& pathToFile, const std::string& pathToTexture) {
 	this->parseInputFile(pathToFile);
 	this->parseInputTexture(pathToTexture);
 	this->textureAvailable = true;
@@ -23,14 +18,9 @@ FileParser::~FileParser() {
 	for (auto it = this->faces.begin(); it != this->faces.end(); it++)
 		(*it).clear();
 	this->faces.clear();
-	if (this->textureData != nullptr)
-	{
-		delete[] this->textureData;
-		this->textureData = nullptr;
-	}
 }
 
-void FileParser::parseInputFile(std::string pathToFile) {
+void FileParser::parseInputFile(const std::string& pathToFile) {
 	std::ifstream objectFile(pathToFile);
 
 	if (!objectFile) {
@@ -40,136 +30,106 @@ void FileParser::parseInputFile(std::string pathToFile) {
 	std::string tmpFileLine;
 	std::string v, x, y, z, name;
 
-	while (!objectFile.eof())
+	while (std::getline(objectFile, tmpFileLine))
 	{
-		getline(objectFile, tmpFileLine);
-		std::stringstream ss(tmpFileLine);
+		if (tmpFileLine.empty() || tmpFileLine[0] == '#') {
+			continue;
+		}
 
-		if (tmpFileLine.find("v ") != tmpFileLine.npos) {
-			ss >> v >> x >> y >> z;
-			Vertex single = {std::stof(x.c_str()), std::stof(y.c_str()), std::stof(z.c_str())};
-			this->vertices.push_back(single);
-		} else if (tmpFileLine.find("vt") != tmpFileLine.npos) {
-			ss >> v >> x >> y;
-			TextureVertice single = {std::stof(x.c_str()), std::stof(y.c_str())};
-			this->textureVertices.push_back(single);
-		} else if (tmpFileLine.find("f ") != tmpFileLine.npos) {
+		std::stringstream ss(tmpFileLine);
+		std::string prefix;
+		ss >> prefix;
+
+		if (prefix == "v") {
+			float x, y, z;
+			ss >> x >> y >> z;
+			this->vertices.push_back({x, y, z});
+		} 
+		else if (prefix == "vt") {
+			float x, y;
+			ss >> x >> y;
+			this->textureVertices.push_back({x, y});
+		} 
+		else if (prefix == "f") {
 			this->parseFaceLine(tmpFileLine);
 		}
 	}
 	objectFile.close();
 }
 
-void FileParser::parseFaceLine(std::string line) { 
-	line.erase(0, 2);
-	auto faceArray = this->SplitByDelim(line,  ' ');
-	std::vector<Face> facesFromLine = {};
+void FileParser::parseFaceLine(const std::string& line) { 
+    std::string faceLine = line.substr(2);
+    auto faceArray = this->SplitByDelim(faceLine, ' ');
+    std::vector<Face> facesFromLine;
+    facesFromLine.reserve(faceArray.size());
 
-	for (std::size_t i = 0; i < faceArray.size(); i++)
-	{
-		if (std::find(line.begin(), line.end(), '/') != line.end()) {
-			auto tmp = this->SplitByDelim(faceArray[i], '/');
-			
-			if (this->amountDelimInLine(line, '/') == 1) {
-				Face single = {(std::stoi(tmp[0]) - 1), (std::stoi(tmp[1]) - 1), -1};
-				facesFromLine.push_back(single);
-			
-			} else {
-				auto pos = std::find(line.begin(), line.end(), '/');
-				if (pos != line.end())
-					pos++;
+    for (const auto& faceStr : faceArray)
+    {
+        if (faceStr.find('/') != std::string::npos) {
+            auto tmp = this->SplitByDelim(faceStr, '/');
+            
+            if (tmp.size() == 2 && !tmp[1].empty()) {
+                Face single = {std::stoi(tmp[0]) - 1, std::stoi(tmp[1]) - 1, -1};
+                facesFromLine.push_back(single);
+            }
+            else if (tmp.size() == 3 && tmp[1].empty()) {
+                Face single = {std::stoi(tmp[0]) - 1, -1, std::stoi(tmp[2]) - 1};
+                facesFromLine.push_back(single);
+            }
+            else if (tmp.size() == 3 && !tmp[1].empty()) {
+                Face single = {std::stoi(tmp[0]) - 1, std::stoi(tmp[1]) - 1, std::stoi(tmp[2]) - 1};
+                facesFromLine.push_back(single);
+            }
+        } 
+        else {
+            Face single = {std::stoi(faceStr) - 1, -1, -1};
+            facesFromLine.push_back(single);
+        }
+    }
 
-				if (*pos == '/') {
-					Face single = {(std::stoi(tmp[0]) - 1), -1, (std::stoi(tmp[1]) - 1)};
-					facesFromLine.push_back(single);
-				} else {
-					Face single = {std::stoi(tmp[0]) - 1, (std::stoi(tmp[1]) - 1), (std::stoi(tmp[2]) - 1)};
-					facesFromLine.push_back(single);
-				}
-			}
-		} else {
-			Face single = {(std::stoi(faceArray[i]) - 1), -1, -1};
-			facesFromLine.push_back(single);
-		}
-	}
-
-	this->faces.push_back(facesFromLine);
+    this->faces.push_back(std::move(facesFromLine));
 }
 
-int FileParser::amountDelimInLine(std::string line, char delim) {
-	int count = 0;
-
-	for (auto it = line.begin(); it != line.end(); it++) {
-		if ((*it) == delim)
-			count += 1;
-	}
-
-	return (count);
+int FileParser::amountDelimInLine(const std::string& line, char delim) {
+	return std::count(line.begin(), line.end(), delim);
 }
 
-std::vector<std::string> FileParser::SplitByDelim(std::string line, char delim) {
-	std::vector<std::string> array = {};
-	std::size_t start = 0, index = 0;
+std::vector<std::string> FileParser::SplitByDelim(const std::string& line, char delim) {
+    std::vector<std::string> array;
+    std::size_t start = 0;
 
-	while (index < line.size())
-	{
-		if (line[index] == delim) {
-			try {
-				array.push_back(line.substr(start, index - start));
-			} catch (std::out_of_range) {
-				std::cout << "aaaa" << std::endl;
-				exit(1);
-			}
-			
-			while (line[index] && line[index] == delim)
-				index++;
+    for (std::size_t i = 0; i <= line.size(); i++)
+    {
+        if (i == line.size() || line[i] == delim) {
+            array.push_back(line.substr(start, i - start));
+            start = i + 1;
+        }
+    }
 
-			start = index;
-		}
-		index++;
-	}
-
-	if (start < line.size())
-	{
-		while (start < line.size() && line[start] == delim)
-			start++;
-		if (start == line.size())
-			return (array);
-
-		array.push_back(line.substr(start, line.size() - start));
-	}
-	return (array);
+    return array;
 }
 
-void FileParser::parseInputTexture(std::string pathToTexture) {
+void FileParser::parseInputTexture(const std::string& pathToTexture) {
     FILE* f = fopen(pathToTexture.c_str(), "rb");
+    if (!f) {
+        std::cout << "Failed to open texture file" << std::endl;
+        exit(1);
+    }
+    
     unsigned char info[54];
-
     fread(info, sizeof(unsigned char), 54, f); 
 
-    int width = *(int*)&info[18];
-    int height = *(int*)&info[22];
+    this->textureWidth = *(int*)&info[18];
+    this->textureHeight = *(int*)&info[22];
 
-    int size = 3 * width * height;
-    this->textureData = new unsigned char[size];
+    int size = 3 * this->textureWidth * this->textureHeight;
+    this->textureData.resize(size);
 
-    fread(this->textureData, sizeof(unsigned char), size, f);
+    fread(this->textureData.data(), sizeof(unsigned char), size, f);
     fclose(f);
 
-	if (!this->textureData) {
-		std::cout << "Failed to load texture" << std::endl;
-		exit(1);
-	}
-
-	this->textureWidth = width;
-	this->textureHeight = height;
-
     for (int i = 0; i < size; i += 3)
-    {
-        unsigned char tmp = this->textureData[i];
-        this->textureData[i] = this->textureData[i+2];
-        this->textureData[i+2] = tmp;
-    }
+        std::swap(this->textureData[i], this->textureData[i+2]);
 }
 
 TextureVertice FileParser::getTextureFromFace(const Face& single) {
@@ -217,7 +177,7 @@ bool FileParser::getTextureAvailable() {
 }
 
 unsigned char *FileParser::getTextureData() {
-	return this->textureData;
+	return this->textureData.data();
 }
 
 int FileParser::getTextureWidth() {
@@ -226,4 +186,4 @@ int FileParser::getTextureWidth() {
 
 int FileParser::getTextureHeight() {
 	return this->textureHeight;
-}
+ }
