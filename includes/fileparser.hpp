@@ -42,6 +42,8 @@ private:
 	std::vector<unsigned char> textureData;
 	int textureWidth = 0;
 	int textureHeight = 0;
+
+	Vertex centerVertex;
 	
 public:
 	FileParser(const std::string& pathToFile);
@@ -55,6 +57,8 @@ public:
 	std::vector<std::string> SplitByDelim(const std::string& line, char delim);
 	int amountDelimInLine(const std::string& line, char delim);
 
+	void computeCenterVertex();
+	Vertex getCenterVertex();
 	void computeVertexes();
 	TextureVertice getTextureFromFace(const Face& single);
 	

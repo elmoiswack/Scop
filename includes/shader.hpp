@@ -5,6 +5,7 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <fstream>
 
 enum DisplayMode {
 	POINT = GL_POINT,
@@ -36,15 +37,25 @@ private:
 		"uniform mat4 model;\n"
 		"uniform mat4 view;\n"
 		"uniform mat4 perspective;\n"
+		"uniform vec3 centerPos;\n"
+		"uniform int rotationBool;\n"
 		"\n"
 		"out vec2 textureCoords;\n"
 		"out vec3 fragColor;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = perspective * view * model * vec4(aPos, 1);\n"
+		"	vec4 tmpPos;\n"
+		"	if (rotationBool == 1) {\n"
+		"		tmpPos = vec4(aPos, 1) - vec4(centerPos, 1);\n"
+		"		tmpPos = tmpPos * model;\n"
+		"		tmpPos = tmpPos + vec4(centerPos, 1);\n"
+		"	} else {\n"
+		"		tmpPos = model * vec4(aPos, 1);\n"
+		"	}\n"
+		"	gl_Position = perspective * view * tmpPos;\n"
 		"	textureCoords = aTexture;\n"
-		"	fragColor = abs(normalize(aPos)) * aColor;\n"
+		"	fragColor = aPos * aColor;\n"
 		"}\0";
 
 	const char *fragmentShaderSource = "#version 330 core\n"
@@ -60,14 +71,7 @@ private:
 		"{\n"
 		"	vec4 color = vec4(fragColor, 1.0);\n"
 		"	vec4 tex = texture(ourTexture, textureCoords);\n"
-		"\n"
-		"	if (textureOpacity > 0.99) {\n"
-		"		outColor = tex;\n"
-		"	} else if (textureOpacity < 0.01) {\n"
-		"		outColor = color;\n"
-		"	} else {\n"
-		"		outColor = mix(color, tex, textureOpacity);\n"
-		"	}\n"
+		"	outColor = mix(color, tex, textureOpacity);\n"
 		"}\0";
 
 public:

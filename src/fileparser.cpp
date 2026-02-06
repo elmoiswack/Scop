@@ -139,6 +139,22 @@ TextureVertice FileParser::getTextureFromFace(const Face& single) {
 	return (this->textureVertices[single.texture]);
 }
 
+void FileParser::computeCenterVertex() {
+	std::size_t size = this->vertices.size();
+	std::vector<float> arrayX, arrayY, arrayZ;
+
+	for (std::size_t index = 0; index < size; index++) {
+		arrayX.push_back(this->vertices[index].x);
+		arrayY.push_back(this->vertices[index].y);
+		arrayZ.push_back(this->vertices[index].z);
+	}
+
+	float centerX = ((*std::max_element(arrayX.begin(), arrayX.end())) + (*std::min_element(arrayX.begin(), arrayX.end()))) * 0.5f;
+	float centerY = ((*std::max_element(arrayY.begin(), arrayY.end())) + (*std::min_element(arrayY.begin(), arrayY.end()))) * 0.5f;
+	float centerZ = ((*std::max_element(arrayZ.begin(), arrayZ.end())) + (*std::min_element(arrayZ.begin(), arrayZ.end()))) * 0.5f;
+	this->centerVertex = {centerX, centerY, centerZ};
+}
+
 void FileParser::computeVertexes() {
 	this->computedVertex = {};
 
@@ -158,6 +174,10 @@ void FileParser::computeVertexes() {
 			third++;
 		}
 	}
+}
+
+Vertex FileParser::getCenterVertex() {
+	return this->centerVertex;
 }
 
 std::vector<Vertex> FileParser::getVertices() {

@@ -5,7 +5,7 @@ Matrix::Matrix(const unsigned int width, const unsigned int height) {
 	float aspectRatio = float(width) / float(height);
 	float zNear = 0.01f;
 	float zFar = 100.0f;
-	float fov = 45.0f * (3.1415926f / 180.0f);
+	float fov = this->degreesToRadians(45.0f);
 	float f = 1.0f / tan(fov / 2.0f);
 
 	this->perspective[0]  = f / aspectRatio;
@@ -22,8 +22,8 @@ Matrix::Matrix(const unsigned int width, const unsigned int height) {
 Matrix::~Matrix() {}
 
 void Matrix::getForward(float *forward, Camera& cam) {
-    float yRad = cam.getYRotation() * (3.1415926f / 180.0f);
-    float xRad = cam.getXRotation() * (3.1415926f / 180.0f);
+    float yRad = this->degreesToRadians(cam.getYRotation());
+    float xRad = this->degreesToRadians(cam.getXRotation());
 
     forward[0] = cosf(yRad) * cosf(xRad);
     forward[1] = sinf(xRad);
@@ -121,37 +121,41 @@ void Matrix::setModelToCrazy() {
 	this->whichRotation = Rotation::CRAZY;
 }
 
+float Matrix::degreesToRadians(float degrees) {
+	return (degrees * (M_PI / 180.0f));
+}
+
 void  Matrix::computeModelToX() {
 	memcpy(this->model, this->identity, 16 * sizeof(float));
-	this->model[5] = cos(this->angle);
-	this->model[6] = -sin(this->angle);
-	this->model[9] = sin(this->angle);
-	this->model[10] = cos(this->angle);
+	this->model[5] = cosf(this->degreesToRadians(this->angle));
+	this->model[6] = -sinf(this->degreesToRadians(this->angle));
+	this->model[9] = sinf(this->degreesToRadians(this->angle));
+	this->model[10] = cosf(this->degreesToRadians(this->angle));
 }
 
 void  Matrix::computeModelToY() {
 	memcpy(this->model, this->identity, 16 * sizeof(float));
-	this->model[0] = cos(this->angle);
-	this->model[2] = sin(this->angle);
-	this->model[8] = -sin(this->angle);
-	this->model[10] = cos(this->angle);
+	this->model[0] = cosf(this->degreesToRadians(this->angle));
+	this->model[2] = sinf(this->degreesToRadians(this->angle));
+	this->model[8] = -sinf(this->degreesToRadians(this->angle));
+	this->model[10] = cosf(this->degreesToRadians(this->angle));
 }
 
 void  Matrix::computeModelToZ() {
 	memcpy(this->model, this->identity, 16 * sizeof(float));
-	this->model[0] = cos(this->angle);
-	this->model[1] = -sin(this->angle);
-	this->model[4] = sin(this->angle);
-	this->model[5] = cos(this->angle);
+	this->model[0] = cosf(this->degreesToRadians(this->angle));
+	this->model[1] = -sinf(this->degreesToRadians(this->angle));
+	this->model[4] = sinf(this->degreesToRadians(this->angle));
+	this->model[5] = cosf(this->degreesToRadians(this->angle));
 }
 
 void  Matrix::computeModelToCrazy() {
 	memcpy(this->model, this->identity, 16 * sizeof(float));
-	this->model[3] = cos(this->angle);
-	this->model[7] = -sin(this->angle);
-	this->model[2] = sin(this->angle);
-	this->model[1] = -cos(this->angle);
-	this->model[10] = cos(this->angle);
+	this->model[3] = cosf(this->degreesToRadians(this->angle));
+	this->model[7] = -sinf(this->degreesToRadians(this->angle));
+	this->model[2] = sinf(this->degreesToRadians(this->angle));
+	this->model[1] = -cosf(this->degreesToRadians(this->angle));
+	this->model[10] = cosf(this->degreesToRadians(this->angle));
 }
 
 void Matrix::setAngle(float rotationSpeed) {

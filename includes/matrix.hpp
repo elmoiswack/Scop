@@ -44,6 +44,7 @@ public:
 	float dot(const float a[3], const float b[3]);
 	void buildViewMatrix(Camera& cam);
 
+	float degreesToRadians(float degrees);
 	void setModelToIdentity();
 	void setModelToX();
 	void setModelToY();

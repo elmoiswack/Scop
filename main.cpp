@@ -96,18 +96,23 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+		shader.setUniform1i("rotationBool", 1);
 		matrix.setModelToX();
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+		shader.setUniform1i("rotationBool", 1);
 		matrix.setModelToY();
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+		shader.setUniform1i("rotationBool", 1);
 		matrix.setModelToZ();
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+		shader.setUniform1i("rotationBool", 1);
 		matrix.setModelToCrazy();
 	}
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+		shader.setUniform1i("rotationBool", 0);
 		matrix.setModelToIdentity();
 		shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
 	}
@@ -284,6 +289,11 @@ int main(int argc, char *argv[])
 	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
 	shader.setUniform1i("ourTexture", 0);
 	shader.setUniform3f("aColor", shader.getColor());
+	objectFile.computeCenterVertex();
+	Vertex centerVertex = objectFile.getCenterVertex();
+	float centerPoint[3] = {centerVertex.x, centerVertex.y, centerVertex.z};
+	shader.setUniform3f("centerPos", centerPoint);
+	shader.setUniform1i("rotationBool", 0);
 	shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
 
 	objectFile.computeVertexes();
