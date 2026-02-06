@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <string>
+#include <random>
 
 struct Vertex {
 	float x;
@@ -29,6 +30,7 @@ struct Face {
 struct ComputedVertex {
 	Vertex pos;
 	TextureVertice texture;
+	float color[3];
 };
 
 class FileParser
@@ -42,8 +44,7 @@ private:
 	std::vector<unsigned char> textureData;
 	int textureWidth = 0;
 	int textureHeight = 0;
-
-	Vertex centerVertex;
+	float centerVertex[3] = {0.0f, 0.0f, 0.0f};
 	
 public:
 	FileParser(const std::string& pathToFile);
@@ -58,7 +59,7 @@ public:
 	int amountDelimInLine(const std::string& line, char delim);
 
 	void computeCenterVertex();
-	Vertex getCenterVertex();
+	float *getCenterVertex();
 	void computeVertexes();
 	TextureVertice getTextureFromFace(const Face& single);
 	

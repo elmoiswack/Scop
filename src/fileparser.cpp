@@ -87,6 +87,7 @@ void FileParser::parseFaceLine(const std::string& line) {
         }
     }
 
+
     this->faces.push_back(std::move(facesFromLine));
 }
 
@@ -149,10 +150,9 @@ void FileParser::computeCenterVertex() {
 		arrayZ.push_back(this->vertices[index].z);
 	}
 
-	float centerX = ((*std::max_element(arrayX.begin(), arrayX.end())) + (*std::min_element(arrayX.begin(), arrayX.end()))) * 0.5f;
-	float centerY = ((*std::max_element(arrayY.begin(), arrayY.end())) + (*std::min_element(arrayY.begin(), arrayY.end()))) * 0.5f;
-	float centerZ = ((*std::max_element(arrayZ.begin(), arrayZ.end())) + (*std::min_element(arrayZ.begin(), arrayZ.end()))) * 0.5f;
-	this->centerVertex = {centerX, centerY, centerZ};
+	this->centerVertex[0] = ((*std::max_element(arrayX.begin(), arrayX.end())) + (*std::min_element(arrayX.begin(), arrayX.end()))) * 0.5f;
+	this->centerVertex[1] = ((*std::max_element(arrayY.begin(), arrayY.end())) + (*std::min_element(arrayY.begin(), arrayY.end()))) * 0.5f;
+	this->centerVertex[2] = ((*std::max_element(arrayZ.begin(), arrayZ.end())) + (*std::min_element(arrayZ.begin(), arrayZ.end()))) * 0.5f;
 }
 
 void FileParser::computeVertexes() {
@@ -160,23 +160,31 @@ void FileParser::computeVertexes() {
 
 	for (std::size_t index = 0; index < this->faces.size(); index++) {
 		std::size_t first = 0, second = 1, third = 2;
+		
+		std::random_device rd;
+   		std::mt19937 gen(rd());
+    	std::uniform_int_distribution<> distrib(1, 255);
+		float r = (float)distrib(gen) / 255.0f;
+		float g = (float)distrib(gen) / 255.0f;
+		float b = (float)distrib(gen) / 255.0f;
 
 		while (third < this->faces[index].size()) {
 			auto firstFace = this->faces[index][first];
 			auto secondFace = this->faces[index][second];
 			auto thirdFace = this->faces[index][third];
 
-			this->computedVertex.push_back({this->vertices[firstFace.vertice], getTextureFromFace(firstFace)});
-			this->computedVertex.push_back({this->vertices[secondFace.vertice], getTextureFromFace(secondFace)});
-			this->computedVertex.push_back({this->vertices[thirdFace.vertice], getTextureFromFace(thirdFace)});
+			this->computedVertex.push_back({this->vertices[firstFace.vertice], getTextureFromFace(firstFace), {r, g, b}});
+			this->computedVertex.push_back({this->vertices[secondFace.vertice], getTextureFromFace(secondFace), {r, g, b}});
+			this->computedVertex.push_back({this->vertices[thirdFace.vertice], getTextureFromFace(thirdFace), {r, g, b}});
 
 			second++;
 			third++;
 		}
+
 	}
 }
 
-Vertex FileParser::getCenterVertex() {
+float *FileParser::getCenterVertex() {
 	return this->centerVertex;
 }
 

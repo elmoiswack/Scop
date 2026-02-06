@@ -122,21 +122,28 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+		shader.setUniform1i("colorPerFace", 1);
+	}
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+		shader.setUniform1i("colorPerFace", 0);
 		shader.setColor((float[]){1.0f, 1.0f, 1.0f});
 		shader.setUniform3f("aColor", shader.getColor());
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+		shader.setUniform1i("colorPerFace", 0);
 		shader.setColor((float[]){1.0f, 0.0f, 0.0f});
 		shader.setUniform3f("aColor", shader.getColor());
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+		shader.setUniform1i("colorPerFace", 0);
 		shader.setColor((float[]){0.0f, 1.0f, 0.0f});
 		shader.setUniform3f("aColor", shader.getColor());
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
+		shader.setUniform1i("colorPerFace", 0);
 		shader.setColor((float[]){0.0f, 0.0f, 1.0f});
 		shader.setUniform3f("aColor", shader.getColor());
 		shader.setShowTexture(false);
@@ -201,6 +208,7 @@ void displayControls() {
 	std::cout << "--------------------------------" << std::endl;
 	std::cout << "COLOR:" << std::endl;
 	std::cout << "C + F = color per face" << std::endl;
+	std::cout << "C + V = color per vertex" << std::endl;
 	std::cout << "C + R = color red" << std::endl;
 	std::cout << "C + G = color green" << std::endl;
 	std::cout << "C + B = color blue" << std::endl;
@@ -261,7 +269,6 @@ int main(int argc, char *argv[])
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, objectFile.getTextureWidth(), objectFile.getTextureHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, objectFile.getTextureData());
 	glGenerateMipmap(GL_TEXTURE_2D);
 
-
 	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -269,8 +276,6 @@ int main(int argc, char *argv[])
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);  
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
@@ -282,29 +287,31 @@ int main(int argc, char *argv[])
 	bool texture = objectFile.getTextureAvailable();
 	
 	matrix.buildViewMatrix(camera);
-	
+
+	objectFile.computeCenterVertex();
+	objectFile.computeVertexes();
+
 	shader.useProgram();
 	shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
 	shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
 	shader.setUniform1i("ourTexture", 0);
 	shader.setUniform3f("aColor", shader.getColor());
-	objectFile.computeCenterVertex();
-	Vertex centerVertex = objectFile.getCenterVertex();
-	float centerPoint[3] = {centerVertex.x, centerVertex.y, centerVertex.z};
-	shader.setUniform3f("centerPos", centerPoint);
+	shader.setUniform1i("colorPerFace", 0);
+	shader.setUniform3f("centerPos", objectFile.getCenterVertex());
 	shader.setUniform1i("rotationBool", 0);
 	shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
 
-	objectFile.computeVertexes();
-	glBufferData(GL_ARRAY_BUFFER, objectFile.getComputedVertex().size() * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
+	size_t vertexCount = objectFile.getComputedVertex().size();
+	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
-	
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, color));
+		
 	float lastFrame = 0.0f;
-	size_t vertexCount = objectFile.getComputedVertex().size();
 
 	while (!glfwWindowShouldClose(window))
 	{
