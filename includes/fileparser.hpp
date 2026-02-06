@@ -56,7 +56,6 @@ public:
 
 	void parseFaceLine(const std::string& line);
 	std::vector<std::string> SplitByDelim(const std::string& line, char delim);
-	int amountDelimInLine(const std::string& line, char delim);
 
 	void computeCenterVertex();
 	float *getCenterVertex();
@@ -70,6 +69,27 @@ public:
 	unsigned char* getTextureData();
 	int getTextureWidth();
 	int getTextureHeight();
+
+	class OpenFileException : public std::exception {
+	public:
+		const char *what() const throw() {
+			return ("Failed to open file!");
+		}
+	};
+
+	class NoVertexFoundException : public std::exception {
+	public:
+		const char *what() const throw() {
+			return ("No vertex found in object file!");
+		}
+	};
+
+	class VertexOutRangeException : public std::exception {
+	public:
+		const char *what() const throw() {
+			return ("Vertex found in face is out of range!");
+		}
+	};
 };
 
 #endif

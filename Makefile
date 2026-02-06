@@ -9,10 +9,10 @@ OBJ := $(OBJ:.c=.o)
 CC := c++
 UNAME_S := $(shell uname -s)
 
-CFLAGS := -Wall -Wextra -Werror -std=c++20 -Iincludes
+CFLAGS := -Wall -Wextra -Werror -std=c++20 -Iincludes -g -fsanitize=address
 
 ifeq ($(UNAME_S),Linux)
-    LIBS := -lglfw -lGL -ldl -lm -lpthread
+    LIBS := -lglfw -lGL -ldl -lm -lpthread -g -fsanitize=address
 endif
 
 ifeq ($(UNAME_S),Darwin)

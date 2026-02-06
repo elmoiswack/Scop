@@ -127,31 +127,30 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
 		shader.setUniform1i("colorType", 1);
 		shader.setUniform3f("aColor", (float[]){1.0f, 1.0f, 1.0f});
-		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 		shader.setUniform1i("colorType", 2);
 		shader.setUniform3f("aColor", (float[]){1.0f, 0.0f, 0.0f});
-		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
 		shader.setUniform1i("colorType", 2);
 		shader.setUniform3f("aColor", (float[]){0.0f, 1.0f, 0.0f});
-		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
 		shader.setUniform1i("colorType", 2);
 		shader.setUniform3f("aColor", (float[]){0.0f, 0.0f, 1.0f});
-		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
-		// shader.setShowTexture(false);
-		if (shader.getBreatheEffect() == true)
-			shader.setBreatheEffect(false);
-		else
-			shader.setBreatheEffect(true);
+		shader.setBreatheEffect(!shader.getBreatheEffect());
 	}
-
+	if (shader.getBreatheEffect() == true) {
+		if (shader.getIncrementColorValue() == true)
+			shader.incrementColorOpacity();
+		else
+			shader.decrementColorOpacity();
+		shader.setUniform1f("colorOpacity", shader.getColorOpacity());
+	}
+	
 	if (shader.getFinishedApplyTexture() == true && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS && textureAvailable == true) {
 		shader.setFinishedApplyTexture(false);
 		if (shader.getTextureOpacity() == 0.0f)
@@ -159,7 +158,6 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 		else
 			shader.setShowTexture(false);
 	}
-
 	if (shader.getShowTexture() == true && shader.getFinishedApplyTexture() == false) {
 		shader.incrementTextureOpacity(deltaTime);
 		shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
@@ -168,15 +166,6 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 		shader.decrementTextureOpacity(deltaTime);
 		shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
 	}
-
-	if (shader.getBreatheEffect() == true) {
-		if (shader.getIncrementColorValue() == true)
-			shader.incrementColorOpacity();
-		else
-			shader.decrementColorOpacity();
-		shader.setUniform1f("colorOpacity", shader.getColorOpacity());
-	}
-
 }
 
 void displayControls() {
@@ -213,125 +202,128 @@ void displayControls() {
 	std::cout << "--------------------------------" << std::endl;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	if (argc != 2 && argc != 3)
 	{
-		std::cout << "Pass a single object file with the executable! For example: ./Scop models/42.obj" << std::endl; 
+		std::cout << "Pass a single object file with the executable! For example: './Scop models/42.obj' or './Scop models/42.obj textures/nyan.bmp'" << std::endl; 
 		return 1;
 	}
 
-	FileParser objectFile(argc == 2 ? FileParser(argv[1]) : FileParser(argv[1], argv[2]));
-    
-	if (!glfwInit()) {
-		std::cout << "Failed to init glfw for window creation!" << std::endl;
-		return 1;
-	};
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "SCOP", NULL, NULL);
-	if (window == NULL)
-	{
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-	
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		glfwTerminate();
-		return -1;
-	}    
-
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-	Shader shader = Shader();
-	Camera camera = Camera();
-	Matrix matrix = Matrix(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	unsigned int textureID;
-	glActiveTexture(GL_TEXTURE0);
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, objectFile.getTextureWidth(), objectFile.getTextureHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, objectFile.getTextureData());
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	unsigned int VBO;
-	glGenBuffers(1, &VBO);  
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-
-	glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
-
-	displayControls();
-
-	bool texture = objectFile.getTextureAvailable();
-	
-	matrix.buildViewMatrix(camera);
-
-	objectFile.computeCenterVertex();
-	objectFile.computeVertexes();
-
-	shader.useProgram();
-	shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
-	shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
-	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
-	shader.setUniform1i("ourTexture", 0);
-	shader.setUniform3f("aColor", (float[]){1.0f, 1.0f, 1.0f});
-	shader.setUniform1f("colorOpacity", shader.getColorOpacity());
-	shader.setUniform1i("colorType", 0);
-	shader.setUniform3f("centerPos", objectFile.getCenterVertex());
-	shader.setUniform1i("rotationBool", 0);
-	shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
-
-	size_t vertexCount = objectFile.getComputedVertex().size();
-	glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, color));
+	try {
+		FileParser objectFile(argc == 2 ? FileParser(argv[1]) : FileParser(argv[1], argv[2]));
 		
-	float lastFrame = 0.0f;
+		if (!glfwInit()) {
+			std::cout << "Failed to init glfw for window creation!" << std::endl;
+			return 1;
+		};
 
-	while (!glfwWindowShouldClose(window))
-	{
-		float currentFrame = glfwGetTime();
-		float deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		processInput(window, camera, matrix, shader, texture, deltaTime);
+		GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "SCOP", NULL, NULL);
+		if (window == NULL) {
+			std::cout << "Failed to create GLFW window" << std::endl;
+			glfwTerminate();
+			return -1;
+		}
+		
+		glfwMakeContextCurrent(window);
 
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+			std::cout << "Failed to initialize GLAD" << std::endl;
+			glfwTerminate();
+			return -1;
+		}
 
+		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+
+		Shader shader = Shader();
+		Camera camera = Camera();
+		Matrix matrix = Matrix(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+		unsigned int textureID;
+		glActiveTexture(GL_TEXTURE0);
+		glGenTextures(1, &textureID);
 		glBindTexture(GL_TEXTURE_2D, textureID);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, objectFile.getTextureWidth(), objectFile.getTextureHeight(), 0, GL_RGB, GL_UNSIGNED_BYTE, objectFile.getTextureData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		unsigned int VAO;
+		glGenVertexArrays(1, &VAO);
 		glBindVertexArray(VAO);
-		glPolygonMode(GL_FRONT_AND_BACK, shader.getMode());
-		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 
-    	glfwSwapBuffers(window);
-    	glfwPollEvents();
+		unsigned int VBO;
+		glGenBuffers(1, &VBO);  
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+
+		glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
+
+		bool texture = objectFile.getTextureAvailable();
+		
+		matrix.buildViewMatrix(camera);
+
+		objectFile.computeCenterVertex();
+		objectFile.computeVertexes();
+
+		shader.useProgram();
+		shader.setUniformMatrix4x4(matrix.getModelMatrix(), "model");
+		shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
+		shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
+		shader.setUniform1i("ourTexture", 0);
+		shader.setUniform3f("aColor", (float[]){1.0f, 1.0f, 1.0f});
+		shader.setUniform1f("colorOpacity", shader.getColorOpacity());
+		shader.setUniform1i("colorType", 0);
+		shader.setUniform3f("centerPos", objectFile.getCenterVertex());
+		shader.setUniform1i("rotationBool", 0);
+		shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
+
+		size_t vertexCount = objectFile.getComputedVertex().size();
+		glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(ComputedVertex), objectFile.getComputedVertex().data(), GL_DYNAMIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, pos));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, texture));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ComputedVertex), (void*)offsetof(ComputedVertex, color));
+			
+		float lastFrame = 0.0f;
+		displayControls();
+
+		while (!glfwWindowShouldClose(window)) {
+			float currentFrame = glfwGetTime();
+			float deltaTime = currentFrame - lastFrame;
+			lastFrame = currentFrame;
+
+			processInput(window, camera, matrix, shader, texture, deltaTime);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			glBindTexture(GL_TEXTURE_2D, textureID);
+			glBindVertexArray(VAO);
+			glPolygonMode(GL_FRONT_AND_BACK, shader.getMode());
+			glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+
+			glfwSwapBuffers(window);
+			glfwPollEvents();
+		}
+		
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+		glfwTerminate();
+	
+	} catch(const std::exception& e) {
+		std::cout << e.what() << std::endl;
+		glfwTerminate();
+		return -1;
 	}
-
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-	glfwTerminate();
     
 	return 0;
 }

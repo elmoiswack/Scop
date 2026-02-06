@@ -20,12 +20,14 @@ Shader::Shader() {
     if (!success) {
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         std::cout << "Vertex shader compilation failed:\n" << infoLog << std::endl;
+		throw CompilingShaderException();
 	}
     
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "Fragment shader compilation failed:\n" << infoLog << std::endl;
+		throw CompilingShaderException();
 	}
 
     this->shaderProgram = glCreateProgram();
@@ -37,6 +39,7 @@ Shader::Shader() {
     if (!success) {
         glGetProgramInfoLog(this->shaderProgram, 512, NULL, infoLog);
         std::cout << "Shader program linking failed:\n" << infoLog << std::endl;
+		throw CompilingShaderException();
     }
 
     glDeleteShader(vertexShader);
@@ -61,17 +64,11 @@ void Shader::useProgram() {
 }
 
 void Shader::setUniformMatrix4x4(const float *matrix, const char *name) {
-	glUniformMatrix4fv(
-		glGetUniformLocation(this->shaderProgram, name),
-		1, GL_FALSE, matrix
-	);
+	glUniformMatrix4fv(glGetUniformLocation(this->shaderProgram, name), 1, GL_FALSE, matrix);
 }
 
 void Shader::setUniformMatrix3x3(const float *matrix, const char *name) {
-	glUniformMatrix3fv(
-		glGetUniformLocation(this->shaderProgram, name),
-		1, GL_FALSE, matrix
-	);
+	glUniformMatrix3fv(glGetUniformLocation(this->shaderProgram, name), 1, GL_FALSE, matrix);
 }
 
 void Shader::setUniform1i(const char* name, int value) {
@@ -97,8 +94,7 @@ void Shader::incrementColorOpacity() {
 }
 
 void Shader::decrementColorOpacity() {
-	if (this->colorOpacity < 0.0f)
-	{
+	if (this->colorOpacity < 0.0f) {
 		this->colorOpacity = 0.0f;
 		this->incrementColorValue = true;
 	}

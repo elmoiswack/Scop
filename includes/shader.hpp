@@ -60,7 +60,7 @@ private:
 		"	if (colorType == 0) {\n"
 		"		fragColor = faceColor;\n"
 		"	} else if (colorType == 1) {\n" 
-		"		fragColor = aPos * aColor;\n"
+		"		fragColor = abs(normalize(aPos)) * aColor;\n"
 		"	} else {\n"
 		"		fragColor = aColor;\n"
 		"	}\n"
@@ -112,9 +112,15 @@ public:
 	bool getShowTexture();
 	void setShowTexture(bool newValue);
 
-
 	void changeMode();
 	int getMode();
+
+	class CompilingShaderException : public std::exception {
+	public:
+		const char *what() const throw() {
+			return ("Failed to compile shaders!");
+		}
+	};
 };
 
 #endif

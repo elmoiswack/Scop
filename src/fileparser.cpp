@@ -24,7 +24,7 @@ void FileParser::parseInputFile(const std::string& pathToFile) {
 	std::ifstream objectFile(pathToFile);
 
 	if (!objectFile) {
-		exit(1);
+		throw OpenFileException();
 	}
 
 	std::string tmpFileLine;
@@ -54,6 +54,11 @@ void FileParser::parseInputFile(const std::string& pathToFile) {
 			this->parseFaceLine(tmpFileLine);
 		}
 	}
+
+	if (this->vertices.size() == 0) {
+		throw NoVertexFoundException();
+	}
+
 	objectFile.close();
 }
 
@@ -91,10 +96,6 @@ void FileParser::parseFaceLine(const std::string& line) {
     this->faces.push_back(std::move(facesFromLine));
 }
 
-int FileParser::amountDelimInLine(const std::string& line, char delim) {
-	return std::count(line.begin(), line.end(), delim);
-}
-
 std::vector<std::string> FileParser::SplitByDelim(const std::string& line, char delim) {
     std::vector<std::string> array;
     std::size_t start = 0;
@@ -113,8 +114,7 @@ std::vector<std::string> FileParser::SplitByDelim(const std::string& line, char 
 void FileParser::parseInputTexture(const std::string& pathToTexture) {
     FILE* f = fopen(pathToTexture.c_str(), "rb");
     if (!f) {
-        std::cout << "Failed to open texture file" << std::endl;
-        exit(1);
+        throw OpenFileException();
     }
     
     unsigned char info[54];
@@ -171,6 +171,12 @@ void FileParser::computeVertexes() {
 			auto firstFace = this->faces[index][first];
 			auto secondFace = this->faces[index][second];
 			auto thirdFace = this->faces[index][third];
+
+			if (((std::size_t)firstFace.vertice >= this->vertices.size()) || \
+			((std::size_t)secondFace.vertice >= this->vertices.size()) || \
+			((std::size_t)thirdFace.vertice >= this->vertices.size())) {
+				throw VertexOutRangeException();
+			}
 
 			this->computedVertex.push_back({this->vertices[firstFace.vertice], getTextureFromFace(firstFace), {r, g, b}});
 			this->computedVertex.push_back({this->vertices[secondFace.vertice], getTextureFromFace(secondFace), {r, g, b}});
