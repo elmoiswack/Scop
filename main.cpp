@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 		if (window == NULL) {
 			std::cout << "Failed to create GLFW window" << std::endl;
 			glfwTerminate();
-			return -1;
+			return 1;
 		}
 		
 		glfwMakeContextCurrent(window);
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 			std::cout << "Failed to initialize GLAD" << std::endl;
 			glfwTerminate();
-			return -1;
+			return 1;
 		}
 
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
 	} catch(const std::exception& e) {
 		std::cout << e.what() << std::endl;
 		glfwTerminate();
-		return -1;
+		return 1;
 	}
     
 	return 0;
