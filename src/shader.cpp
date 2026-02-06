@@ -44,10 +44,10 @@ Shader::Shader() {
 
 	this->lastDeltaTimeForChange = 0.0f;
 	this->currentDisplayMode = DisplayMode::FILL;
-	this->color = {1.0f, 1.0f, 1.0f};
-	this->incrementColorValues = false;
+	this->incrementColorValue = false;
 	this->breatheEffect = false;
 	this->textureOpacity = 0.0f;
+	this->colorOpacity = 1.0f;
 	this->showTexture = false;
 	this->finishedApplyTexture = true;
 }
@@ -86,48 +86,32 @@ void Shader::setUniform3f(const char* name, float* value) {
 	glUniform3f(glGetUniformLocation(this->shaderProgram, name), value[0], value[1], value[2]);
 }
 
-void Shader::setColor(float *newColor) {
-	if (this->breatheEffect == true)
-		this->breatheEffect = false;
-    this->color[0] = newColor[0];
-    this->color[1] = newColor[1];
-    this->color[2] = newColor[2];
-}
-
-float *Shader::getColor() {
-	return this->color.data();
-}
-
-void Shader::incrementColor() {
-	if (this->color[0] > 1.0f)
+void Shader::incrementColorOpacity() {
+	if (this->colorOpacity > 1.0f)
 	{
-		for (int i = 0; i < 3; i++)
-			this->color[i] = 1.0f;
-		this->incrementColorValues = false;
+		this->colorOpacity = 1.0f;
+		this->incrementColorValue = false;
 	}
 	else
-	{
-		for (int i = 0; i < 3; i++)
-			this->color[i] += 0.01f;
-	}
+		this->colorOpacity += 0.01f;
 }
 
-void Shader::decrementColor() {
-	if (this->color[0] < 0.0f)
+void Shader::decrementColorOpacity() {
+	if (this->colorOpacity < 0.0f)
 	{
-		for (int i = 0; i < 3; i++)
-			this->color[i] = 0.0f;
-		this->incrementColorValues = true;
+		this->colorOpacity = 0.0f;
+		this->incrementColorValue = true;
 	}
 	else
-	{
-		for (int i = 0; i < 3; i++)
-			this->color[i] -= 0.01f;
-	}
+		this->colorOpacity -= 0.01f;
 }
 
-bool Shader::getIncrementColorValues() {
-	return this->incrementColorValues;
+float Shader::getColorOpacity() {
+	return this->colorOpacity;
+}
+
+bool Shader::getIncrementColorValue() {
+	return this->incrementColorValue;
 }
 
 bool Shader::getBreatheEffect() {

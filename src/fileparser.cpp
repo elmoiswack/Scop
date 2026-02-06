@@ -157,13 +157,12 @@ void FileParser::computeCenterVertex() {
 
 void FileParser::computeVertexes() {
 	this->computedVertex = {};
-
+	std::random_device rd;
+   	std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(1, 255);
+	
 	for (std::size_t index = 0; index < this->faces.size(); index++) {
 		std::size_t first = 0, second = 1, third = 2;
-		
-		std::random_device rd;
-   		std::mt19937 gen(rd());
-    	std::uniform_int_distribution<> distrib(1, 255);
 		float r = (float)distrib(gen) / 255.0f;
 		float g = (float)distrib(gen) / 255.0f;
 		float b = (float)distrib(gen) / 255.0f;

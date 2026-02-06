@@ -21,8 +21,8 @@ private:
 	
 	float lastDeltaTimeForChange;
 
-	std::vector<float> color = {};
-	bool incrementColorValues;
+	float colorOpacity;
+	bool incrementColorValue;
 	bool breatheEffect;
 
 	float textureOpacity;
@@ -40,7 +40,7 @@ private:
 		"uniform mat4 perspective;\n"
 		"uniform vec3 centerPos;\n"
 		"uniform int rotationBool;\n"
-		"uniform int colorPerFace;\n"
+		"uniform int colorType;\n"
 		"\n"
 		"out vec2 textureCoords;\n"
 		"out vec3 fragColor;\n"
@@ -48,7 +48,6 @@ private:
 		"void main()\n"
 		"{\n"
 		"	vec4 tmpPos;\n"
-		"	vec3 outputColor;\n"
 		"\n"
 		"	if (rotationBool == 1) {\n"
 		"		tmpPos = vec4(aPos, 1) - vec4(centerPos, 1);\n"
@@ -58,15 +57,16 @@ private:
 		"		tmpPos = model * vec4(aPos, 1);\n"
 		"	}\n"
 		"\n"
-		"	if (colorPerFace == 1) {\n"
-		"		outputColor = faceColor;\n"
+		"	if (colorType == 0) {\n"
+		"		fragColor = faceColor;\n"
+		"	} else if (colorType == 1) {\n" 
+		"		fragColor = aPos * aColor;\n"
 		"	} else {\n"
-		"		outputColor = aPos * aColor;\n"
+		"		fragColor = aColor;\n"
 		"	}\n"
 		"\n"
 		"	gl_Position = perspective * view * tmpPos;\n"
 		"	textureCoords = aTexture;\n"
-		"	fragColor = outputColor;\n"
 		"}\0";
 
 	const char *fragmentShaderSource = "#version 330 core\n"
@@ -77,11 +77,12 @@ private:
 		"\n"
 		"uniform sampler2D ourTexture;\n"
 		"uniform float textureOpacity;\n"
+		"uniform float colorOpacity;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	vec4 color = vec4(fragColor, 1.0);\n"
-		"	vec4 tex = texture(ourTexture, textureCoords);\n"
+		"	vec4 color = colorOpacity * vec4(fragColor, 1.0);\n"
+		"	vec4 tex = colorOpacity * texture(ourTexture, textureCoords);\n"
 		"	outColor = mix(color, tex, textureOpacity);\n"
 		"}\0";
 
@@ -96,11 +97,10 @@ public:
 	void setUniform1f(const char* name, float value);
 	void setUniform3f(const char* name, float* value);
 
-	void setColor(float *newColor);
-	float* getColor();
-	void incrementColor();
-	void decrementColor();
-	bool getIncrementColorValues();
+	void incrementColorOpacity();
+	void decrementColorOpacity();
+	float getColorOpacity();
+	bool getIncrementColorValue();
 	bool getBreatheEffect();
 	void setBreatheEffect(bool newValue);
 

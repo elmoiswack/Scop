@@ -122,34 +122,30 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-		shader.setUniform1i("colorPerFace", 1);
+		shader.setUniform1i("colorType", 0);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-		shader.setUniform1i("colorPerFace", 0);
-		shader.setColor((float[]){1.0f, 1.0f, 1.0f});
-		shader.setUniform3f("aColor", shader.getColor());
+		shader.setUniform1i("colorType", 1);
+		shader.setUniform3f("aColor", (float[]){1.0f, 1.0f, 1.0f});
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-		shader.setUniform1i("colorPerFace", 0);
-		shader.setColor((float[]){1.0f, 0.0f, 0.0f});
-		shader.setUniform3f("aColor", shader.getColor());
+		shader.setUniform1i("colorType", 2);
+		shader.setUniform3f("aColor", (float[]){1.0f, 0.0f, 0.0f});
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-		shader.setUniform1i("colorPerFace", 0);
-		shader.setColor((float[]){0.0f, 1.0f, 0.0f});
-		shader.setUniform3f("aColor", shader.getColor());
+		shader.setUniform1i("colorType", 2);
+		shader.setUniform3f("aColor", (float[]){0.0f, 1.0f, 0.0f});
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
-		shader.setUniform1i("colorPerFace", 0);
-		shader.setColor((float[]){0.0f, 0.0f, 1.0f});
-		shader.setUniform3f("aColor", shader.getColor());
+		shader.setUniform1i("colorType", 2);
+		shader.setUniform3f("aColor", (float[]){0.0f, 0.0f, 1.0f});
 		shader.setShowTexture(false);
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
-		shader.setShowTexture(false);
+		// shader.setShowTexture(false);
 		if (shader.getBreatheEffect() == true)
 			shader.setBreatheEffect(false);
 		else
@@ -174,11 +170,11 @@ void processInput(GLFWwindow *window, Camera& cam, Matrix& matrix, Shader& shade
 	}
 
 	if (shader.getBreatheEffect() == true) {
-		if (shader.getIncrementColorValues() == true)
-			shader.incrementColor();
+		if (shader.getIncrementColorValue() == true)
+			shader.incrementColorOpacity();
 		else
-			shader.decrementColor();
-		shader.setUniform3f("aColor", shader.getColor());
+			shader.decrementColorOpacity();
+		shader.setUniform1f("colorOpacity", shader.getColorOpacity());
 	}
 
 }
@@ -296,8 +292,9 @@ int main(int argc, char *argv[])
 	shader.setUniformMatrix4x4(matrix.getViewMatrix(), "view");
 	shader.setUniformMatrix4x4(matrix.getPerspectiveMatrix(), "perspective");
 	shader.setUniform1i("ourTexture", 0);
-	shader.setUniform3f("aColor", shader.getColor());
-	shader.setUniform1i("colorPerFace", 0);
+	shader.setUniform3f("aColor", (float[]){1.0f, 1.0f, 1.0f});
+	shader.setUniform1f("colorOpacity", shader.getColorOpacity());
+	shader.setUniform1i("colorType", 0);
 	shader.setUniform3f("centerPos", objectFile.getCenterVertex());
 	shader.setUniform1i("rotationBool", 0);
 	shader.setUniform1f("textureOpacity", shader.getTextureOpacity());
