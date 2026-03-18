@@ -32,8 +32,10 @@ void Matrix::getForward(float *forward, Camera& cam) {
 
 void Matrix::normalize(float v[3]) {
     float len = std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    if (len == 0.0f) return;
-    v[0] /= len;
+    if (len == 0.0f) 
+		return;
+    
+	v[0] /= len;
     v[1] /= len;
     v[2] /= len;
 }
@@ -54,39 +56,33 @@ void Matrix::buildViewMatrix(Camera& cam) {
 
     float forward[3];
     this->getForward(forward, cam);
-
-    float f[3] = {
-        forward[0],
-        forward[1],
-        forward[2]
-    };
-    this->normalize(f);
+    this->normalize(forward);
 
     float s[3];
-    this->cross(s, f, up);
+    this->cross(s, forward, up);
     this->normalize(s);
 
     float u[3];
-    this->cross(u, s, f);
+    this->cross(u, s, forward);
 
     view[0]  =  s[0];
     view[1]  =  u[0];
-    view[2]  = -f[0];
+    view[2]  = -forward[0];
     view[3]  =  0.0f;
 
     view[4]  =  s[1];
     view[5]  =  u[1];
-    view[6]  = -f[1];
+    view[6]  = -forward[1];
     view[7]  =  0.0f;
 
     view[8]  =  s[2];
     view[9]  =  u[2];
-    view[10] = -f[2];
+    view[10] = -forward[2];
     view[11] =  0.0f;
 
     view[12] = -dot(s, eye);
     view[13] = -dot(u, eye);
-    view[14] =  dot(f, eye);
+    view[14] =  dot(forward, eye);
     view[15] =  1.0f;
 }
 
