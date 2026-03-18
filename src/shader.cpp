@@ -2,11 +2,15 @@
 #include "../includes/glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <cstring>
 
 Shader::Shader() {
     const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     
+	this->vertexShaderSource = this->readFromFile("shaders/vertex.glsl");
+	this->fragmentShaderSource = this->readFromFile("shaders/fragment.glsl");
+
     glShaderSource(vertexShader, 1, &this->vertexShaderSource, NULL);
     glShaderSource(fragmentShader, 1, &this->fragmentShaderSource, NULL);
     
@@ -56,7 +60,33 @@ Shader::Shader() {
 }
 
 Shader::~Shader() {
+	delete[] this->vertexShaderSource;
+	delete[] this->fragmentShaderSource;
 	glDeleteProgram(this->shaderProgram);
+}
+
+char* Shader::readFromFile(const char* pathToFile) {
+	std::ifstream file(pathToFile);
+
+	if (!file) {
+		std::cout << "Failed to open file: " << pathToFile << std::endl;
+		throw CompilingShaderException();
+	}
+
+	std::string fileLine;
+	std::string totalFile;
+
+	while (getline(file, fileLine)) {
+		totalFile.append(fileLine + "\n");
+	}
+
+	char* tmp = new char[totalFile.size() + 1];
+
+	strcpy(tmp, totalFile.c_str());
+
+	tmp[totalFile.size()] = '\0';
+
+	return tmp;
 }
 
 void Shader::useProgram() {
